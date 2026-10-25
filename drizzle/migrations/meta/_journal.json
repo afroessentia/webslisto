@@ -8,6 +8,13 @@
       "when": 1792926971230,
       "tag": "0000_weblisto_fase1",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792948496982,
+      "tag": "0001_create_search_runs",
+      "breakpoints": true
     }
   ]
 }

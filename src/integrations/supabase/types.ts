@@ -172,6 +172,60 @@ export type Database = {
         }
         Relationships: []
       }
+      search_runs: {
+        Row: {
+          apify_dataset_id: string | null
+          apify_run_id: string | null
+          city: string
+          created_at: string
+          duplicates: number
+          error: string | null
+          finished_at: string | null
+          found: number
+          id: string
+          inserted: number
+          max_results: number
+          niche: Database["public"]["Enums"]["lead_niche"]
+          owner_id: string
+          status: string
+          subcategory: string
+        }
+        Insert: {
+          apify_dataset_id?: string | null
+          apify_run_id?: string | null
+          city: string
+          created_at?: string
+          duplicates?: number
+          error?: string | null
+          finished_at?: string | null
+          found?: number
+          id?: string
+          inserted?: number
+          max_results: number
+          niche: Database["public"]["Enums"]["lead_niche"]
+          owner_id?: string
+          status?: string
+          subcategory: string
+        }
+        Update: {
+          apify_dataset_id?: string | null
+          apify_run_id?: string | null
+          city?: string
+          created_at?: string
+          duplicates?: number
+          error?: string | null
+          finished_at?: string | null
+          found?: number
+          id?: string
+          inserted?: number
+          max_results?: number
+          niche?: Database["public"]["Enums"]["lead_niche"]
+          owner_id?: string
+          status?: string
+          subcategory?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       lead_metrics: {

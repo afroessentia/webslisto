@@ -1,3 +1,6 @@
+- [ ] Add required niche, multi-term/city selection, recent-search exclusion and batch summary.
+- [ ] Run serialized searches using existing polling, stop/pending recovery and totals without backend/database changes.
+- [ ] Test batch rules and verify the dialog without starting paid searches.
 - [x] Add website type counts, HTTP-only filtering, precedence and current result count without database changes.
 - [x] Test server-side filter rules and verify the real authenticated filter flow on desktop/mobile. 49 focused tests passed; real counts show 33 total, 8 without site, 25 active, and 10 active HTTP-only results. Clear restores both new filters; mobile has no overflow and build is OK.
 - [x] Add business-name drawer entry points and read-only business details with safe website, Instagram and Maps links.

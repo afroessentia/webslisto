@@ -4,7 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown, LogOut, Plus, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ImportDialogProvider, useImportDialog } from "@/components/import-dialog";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export function Logo() {
@@ -17,6 +18,11 @@ export function Logo() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  return <ImportDialogProvider><TooltipProvider><ShellContent>{children}</ShellContent></TooltipProvider></ImportDialogProvider>;
+}
+
+function ShellContent({ children }: { children: ReactNode }) {
+  const openImport = useImportDialog();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useRouteContext({ from: "/_authenticated" });
@@ -34,16 +40,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto] items-center gap-3 px-4 py-4 sm:flex sm:justify-between sm:px-6">
           <Logo />
           <div className="contents sm:flex sm:items-center sm:gap-3">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="order-3 col-span-2 w-full sm:order-none sm:w-auto">
+                <Button onClick={openImport} className="order-3 col-span-2 w-full sm:order-none sm:w-auto">
                   <Plus /> Importar / Sincronizar Leads
                 </Button>
-              </DialogTrigger>
-              <DialogContent aria-describedby={undefined} className="min-h-48 max-w-[calc(100%-2rem)] rounded-xl border-border bg-card shadow-none sm:max-w-lg">
-                <DialogHeader><DialogTitle className="pr-6 leading-snug">Importar / Sincronizar Leads</DialogTitle></DialogHeader>
-              </DialogContent>
-            </Dialog>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" aria-label="Menu do usuário" title="Menu do usuário" className="justify-self-end">

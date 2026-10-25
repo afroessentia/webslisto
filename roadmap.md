@@ -10,6 +10,6 @@
 - [x] Add navbar message-template editor with independent drafts, tags, preview and close/restore confirmations.
 - [x] Share template loading/recovery, validate and save current title/body only without schema changes.
 - [x] Test template rules and verify editing, saving and WhatsApp refresh in desktop/mobile views. 36 targeted tests pass; authenticated live save/reopen checked with existing text unchanged, destructive edits and composer refresh checked through browser-only fixtures.
-- [ ] Implement shared CSV import modal with encoding, mapping, cleaning, preview and API placeholder.
-- [ ] Add session-owned batched imports, returned-row counts, progress and partial-failure recovery without schema changes.
-- [ ] Test CSV rules and verify import flows and mobile layout.
+- [x] Implement shared CSV import modal with encoding, mapping, cleaning, preview and API placeholder.
+- [x] Add session-owned batched imports, returned-row counts, progress and partial-failure recovery without schema changes.
+- [x] Test CSV rules and verify import flows and mobile layout. 92 tests pass; authenticated browser checks cover encoding, limits, 200+1 batches, failure/retry, returned-ID counting and refresh using intercepted writes. Live import/deduplication remains unverified; no test leads were inserted into the real account.

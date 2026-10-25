@@ -1,3 +1,6 @@
 - [x] Add server-side lead filters, escaping, debounced search, and pagination.
 - [x] Add desktop table, mobile cards, badges, tooltips, and distinct empty states.
 - [x] Verify rules with tests and authenticated desktop/mobile checks without database changes. Actual account has no leads; populated table/pagination verified using browser-only fixtures.
+- [x] Add WhatsApp templates, editable messages, open-first saving, and click events.
+- [x] Add optimistic status selectors, confirmations, and rollback.
+- [x] Test action rules and verify desktop/mobile flows without schema changes. Real account remains empty; write/readback flows verified with browser-only fixtures, not live lead writes.

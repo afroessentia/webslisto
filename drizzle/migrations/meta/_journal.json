@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792926971230,
+      "tag": "0000_weblisto_fase1",
+      "breakpoints": true
+    }
+  ]
 }

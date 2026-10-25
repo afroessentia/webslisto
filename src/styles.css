@@ -49,6 +49,9 @@
   --color-primary-hover: var(--primary-hover);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-badge-blue: var(--badge-blue);
+  --color-badge-purple: var(--badge-purple);
+  --color-badge-teal: var(--badge-teal);
   --font-sans: var(--font-sans);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -87,6 +90,9 @@
   --destructive-foreground: oklch(1 0 0);
   --success: oklch(0.765 0.18 159);
   --warning: oklch(0.7 0.155 22);
+  --badge-blue: oklch(0.76 0.12 235);
+  --badge-purple: oklch(0.78 0.13 300);
+  --badge-teal: oklch(0.78 0.12 185);
   /* #1E2B3A */ --border: oklch(0.29 0.03 250);
   --input: oklch(0.29 0.03 250);
   --ring: oklch(0.765 0.18 159);
@@ -104,6 +110,15 @@
   --sidebar-border: oklch(0.29 0.03 250);
   --sidebar-ring: oklch(0.765 0.18 159);
 }
+
+.lead-badge { display: inline-flex; max-width: 100%; align-items: center; border: 1px solid transparent; border-radius: 6px; padding: 3px 7px; font-size: 11px; font-weight: 500; line-height: 1.4; }
+.badge-green { color: var(--primary); background: color-mix(in oklch, var(--primary) 12%, transparent); }
+.badge-blue { color: var(--badge-blue); background: color-mix(in oklch, var(--badge-blue) 12%, transparent); }
+.badge-purple { color: var(--badge-purple); background: color-mix(in oklch, var(--badge-purple) 12%, transparent); }
+.badge-teal { color: var(--badge-teal); background: color-mix(in oklch, var(--badge-teal) 12%, transparent); }
+.badge-gray, .badge-gray-blue { color: var(--muted-foreground); background: var(--secondary); }
+.badge-red { color: var(--destructive); background: color-mix(in oklch, var(--destructive) 12%, transparent); }
+.badge-red-outline { color: var(--destructive); border-color: var(--destructive); }
 
 @layer base {
   * {

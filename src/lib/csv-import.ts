@@ -20,7 +20,7 @@ export const csvAliases = {
 export type CsvField = keyof typeof csvAliases;
 export type CsvMapping = Record<CsvField, string>;
 export type CsvRow = Record<string, string>;
-export type ImportNiche = TablesInsert<"leads">["niche"];
+export type ImportNiche = Exclude<TablesInsert<"leads">["niche"], undefined>;
 export type CleanLead = Pick<TablesInsert<"leads">, "name" | "subcategory" | "city" | "address" | "phone" | "original_url" | "google_rating" | "google_reviews_count" | "google_place_id">;
 export function csvFileError(name: string, size: number) {
   if (!/\.csv$/i.test(name)) return "Selecione um arquivo .csv.";
@@ -94,7 +94,7 @@ export class CsvBatchError extends Error {
     super(`Falhou no lote ${batch}: ${message}. O que já foi importado foi mantido. Você pode importar o mesmo arquivo de novo: os duplicados são ignorados.`);
   }
 }
-export async function importCsvLeads(rows: CleanLead[], niche: ImportNiche, onProgress: (batch: number, total: number) => void) {
+export async function importCsvLeads(rows: CleanLead[], niche: ImportNiche | undefined, onProgress: (batch: number, total: number) => void) {
   if (!niche || !rows.length || rows.length > MAX_CSV_ROWS) throw new Error("Selecione o nicho e um arquivo com leads válidos.");
   const { data, error } = await supabase.auth.getSession();
   if (error) throw error;
@@ -107,7 +107,7 @@ export async function importCsvLeads(rows: CleanLead[], niche: ImportNiche, onPr
     const batchNumber = offset / IMPORT_BATCH_SIZE + 1;
     onProgress(batchNumber, total);
     // Whitelist cleaned fields instead of spreading untrusted CSV input.
-    const batch = rows.slice(offset, offset + IMPORT_BATCH_SIZE).map(row => ({ name: row.name, subcategory: row.subcategory, city: row.city, address: row.address, phone: row.phone, original_url: row.original_url, google_rating: row.google_rating, google_reviews_count: row.google_reviews_count, google_place_id: row.google_place_id, owner_id, niche, source: "csv", import_batch }));
+    const batch = rows.slice(offset, offset + IMPORT_BATCH_SIZE).map(row => ({ name: row.name, subcategory: row.subcategory ?? null, city: row.city ?? null, address: row.address ?? null, phone: row.phone ?? null, original_url: row.original_url ?? null, google_rating: row.google_rating ?? null, google_reviews_count: row.google_reviews_count ?? null, google_place_id: row.google_place_id ?? null, owner_id, niche, source: "csv", import_batch }));
     try {
       const result = await supabase.from("leads").upsert(batch, { onConflict: "owner_id,dedupe_key", ignoreDuplicates: true }).select("id");
       if (result.error) throw result.error;

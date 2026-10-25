@@ -15,7 +15,7 @@ describe("Batch search rules", () => {
       { niche: "reformas", subcategory: "electricista", city: "Reus", created_at: new Date(now - HISTORY_WINDOW_MS - 1).toISOString() },
       { niche: "otros", subcategory: "fontanero", city: "Tarragona", created_at: new Date(now).toISOString() },
     ], now);
-    expect(rows).toHaveLength(4); expect(rows[0].daysAgo).toBe(2);
+    expect(rows).toHaveLength(4); expect(rows[0]?.daysAgo).toBe(2);
     expect(eligibleSearches(rows, false)).toHaveLength(3); expect(eligibleSearches(rows, true)).toHaveLength(4);
     expect(HISTORY_WINDOW_MS).toBe(2592000000);
   });
@@ -67,7 +67,7 @@ describe("Batch search rules", () => {
     for (const max of [4, 61]) await expect(runSearchBatch(setup({ max }))).rejects.toThrow("entre 5 e 60");
   });
   it("sums only completed rows", () => {
-    const rows = queue(); rows[0] = { ...rows[0], state: "done", result: { found: 30, inserted: 24, duplicates: 6 } }; rows[1] = { ...rows[1], state: "pending" };
+    const rows = queue().map((row, index): BatchRow => index === 0 ? { ...row, state: "done", result: { found: 30, inserted: 24, duplicates: 6 } } : { ...row, state: "pending" });
     expect(batchTotals(rows)).toEqual({ found: 30, inserted: 24, duplicates: 6 });
   });
 });

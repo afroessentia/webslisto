@@ -10,6 +10,7 @@ vi.mock("@/lib/api-search", async original => ({
   pendingSearchesOptions: (id: string) => ({ queryKey: ["search-runs", id], queryFn: mocks.pending }),
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+vi.mock("@/components/ui/checkbox", () => ({ Checkbox: ({ checked, onCheckedChange, ...props }: any) => <input type="checkbox" checked={checked} onChange={event => onCheckedChange(event.target.checked)} {...props} /> }));
 vi.mock("@/lib/api-search-batch", async original => ({
   ...await original<typeof import("@/lib/api-search-batch")>(),
   importedSearchesOptions: (id: string) => ({ queryKey: ["search-runs", id, "imported-history"], queryFn: mocks.history }),
@@ -67,7 +68,7 @@ it("polls under StrictMode and preserves the ID for one manual collect after tim
 it("shows the exact start error and never collects or shows timeout", async () => {
   mocks.start.mockResolvedValue({ error: "Limite diário de 25 buscas atingido" });
   await mount(); await start();
-  expect(screen.getByRole("alert")).toHaveTextContent("Limite diário de 25 buscas atingido");
+  expect(screen.getByText(/Falhou \(Limite diário de 25 buscas atingido/)).toBeInTheDocument();
   expect(mocks.collect).not.toHaveBeenCalled();
   expect(screen.getByLabelText("Depuração da busca")).toHaveTextContent("Limite diário de 25 buscas atingido");
 });

@@ -1,21 +1,31 @@
 import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
+import { fallback } from "@tanstack/zod-adapter";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Lead = Tables<"leads">;
 export const PAGE_SIZE = 25;
 export const leadSearchSchema = z.object({
-  q: z.string().catch(""),
-  niche: z.enum(["all", "reformas", "belleza_estetica", "otros"]).catch("all"),
-  city: z.string().catch(""),
-  mobile: z.boolean().catch(false),
-  noWeb: z.boolean().catch(false),
-  status: z.enum(["all", "nuevo", "calificado", "demo_enviada", "en_conversacion", "ganado", "descartado", "no_contactar"]).catch("all"),
-  page: z.number().int().min(1).catch(1),
+  q: fallback(z.string(), "").default(""),
+  niche: fallback(z.string(), "all").default("all"),
+  city: fallback(z.string(), "").default(""),
+  mobile: fallback(z.boolean(), false).default(false),
+  noWeb: fallback(z.boolean(), false).default(false),
+  websiteType: fallback(z.string(), "all").default("all"),
+  noHttps: fallback(z.boolean(), false).default(false),
+  status: fallback(z.string(), "all").default("all"),
+  page: fallback(z.number(), 1).default(1),
 });
-export type LeadFilters = z.infer<typeof leadSearchSchema>;
-export const defaultLeadFilters = leadSearchSchema.parse({});
+export const websiteTypes = ["sin_web", "solo_redes_sociales", "web_antigua_wordpress", "web_operativa"] as const;
+export function normalizeLeadFilters(filters: z.infer<typeof leadSearchSchema>) {
+  const niche: Lead["niche"] | "all" = filters.niche === "reformas" || filters.niche === "belleza_estetica" || filters.niche === "otros" ? filters.niche : "all";
+  const status: Lead["status"] | "all" = filters.status === "nuevo" || filters.status === "calificado" || filters.status === "demo_enviada" || filters.status === "en_conversacion" || filters.status === "ganado" || filters.status === "descartado" || filters.status === "no_contactar" ? filters.status : "all";
+  const websiteType: Lead["website_status"] | "all" = websiteTypes.find(type => type === filters.websiteType) ?? "all";
+  return { ...filters, niche, status, websiteType, page: Number.isFinite(filters.page) ? Math.max(1, Math.floor(filters.page)) : 1 };
+}
+export type LeadFilters = ReturnType<typeof normalizeLeadFilters>;
+export const defaultLeadFilters = normalizeLeadFilters(leadSearchSchema.parse({}));
 
 export function escapeLeadSearch(value: string) {
   return value.replace(/[\\%_,()]/g, "\\$&");
@@ -41,7 +51,9 @@ export function buildLeadsQuery(filters: LeadFilters) {
   if (filters.niche !== "all") query = query.eq("niche", filters.niche);
   if (filters.city) query = query.eq("city", filters.city);
   if (filters.mobile) query = query.eq("is_mobile", true);
-  if (filters.noWeb) query = query.in("website_status", ["sin_web", "solo_redes_sociales"]);
+  if (filters.websiteType !== "all") query = query.eq("website_status", filters.websiteType);
+  else if (filters.noWeb) query = query.in("website_status", ["sin_web", "solo_redes_sociales"]);
+  if (filters.noHttps) query = query.ilike("original_url", "http://%");
   if (filters.status !== "all") query = query.eq("status", filters.status);
   else query = query.not("status", "in", "(no_contactar,descartado)");
   const { from, to } = pageRange(filters.page);
@@ -75,6 +87,23 @@ export function citiesOptions(userId: string) {
       }
       return [...cities].sort((a, b) => a.localeCompare(b, "pt-BR"));
     },
+  });
+}
+
+export function websiteCountsOptions(userId: string) {
+  return queryOptions({
+    queryKey: ["leads", userId, "website-counts"],
+    queryFn: async () => {
+      const entries = await Promise.all((["all", ...websiteTypes] as const).map(async type => {
+        let query = supabase.from("leads").select("id", { count: "exact", head: true }).eq("owner_id", userId);
+        if (type !== "all") query = query.eq("website_status", type);
+        const { count, error } = await query;
+        if (error) throw error;
+        return [type, count ?? 0] as const;
+      }));
+      return Object.fromEntries(entries) as Record<"all" | Lead["website_status"], number>;
+    },
+    retry: 1,
   });
 }
 

@@ -1,4 +1,5 @@
 import { createFileRoute, useRouter, type ErrorComponentProps } from "@tanstack/react-router";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { useQueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
 import { MetricsStrip } from "@/components/metrics-strip";
@@ -8,7 +9,7 @@ import { Suspense, useCallback } from "react";
 import { LeadFilterBar } from "@/components/lead-filters";
 import { LeadsList } from "@/components/leads-list";
 import { Skeleton } from "@/components/ui/skeleton";
-import { citiesOptions, defaultLeadFilters, leadExistenceOptions, leadSearchSchema, leadsOptions, withLeadFilter, type LeadFilters } from "@/lib/leads";
+import { citiesOptions, defaultLeadFilters, leadExistenceOptions, leadSearchSchema, leadsOptions, normalizeLeadFilters, websiteCountsOptions, withLeadFilter, type LeadFilters } from "@/lib/leads";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -21,14 +22,15 @@ export const Route = createFileRoute("/_authenticated/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: search => leadSearchSchema.parse(search),
-  loaderDeps: ({ search }) => search,
+  validateSearch: zodValidator(leadSearchSchema),
+  loaderDeps: ({ search }) => normalizeLeadFilters(search),
   loader: async ({ context, deps }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(leadMetricsOptions(context.user.id)),
       context.queryClient.ensureQueryData(leadsOptions(context.user.id, deps)),
       context.queryClient.ensureQueryData(citiesOptions(context.user.id)),
       context.queryClient.ensureQueryData(leadExistenceOptions(context.user.id)),
+      context.queryClient.ensureQueryData(websiteCountsOptions(context.user.id)),
     ]);
   },
   pendingMs: 0,
@@ -49,19 +51,20 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
 
 function Dashboard() {
   const { user } = Route.useRouteContext();
-  const filters = Route.useSearch();
+  const filters = normalizeLeadFilters(Route.useSearch());
   const navigate = Route.useNavigate();
   const { data } = useSuspenseQuery(leadMetricsOptions(user.id));
   const { data: cities } = useSuspenseQuery(citiesOptions(user.id));
-  const onChange = useCallback((change: Partial<LeadFilters>) => { void navigate({ search: previous => withLeadFilter(previous, change), replace: true }); }, [navigate]);
+  const { data: websiteCounts } = useSuspenseQuery(websiteCountsOptions(user.id));
+  const onChange = useCallback((change: Partial<LeadFilters>) => { void navigate({ search: previous => withLeadFilter(normalizeLeadFilters(previous), change), replace: true }); }, [navigate]);
   const onClear = useCallback(() => { void navigate({ search: defaultLeadFilters, replace: true }); }, [navigate]);
-  return <DashboardLayout><MetricsStrip metrics={data} /><LeadFilterBar filters={filters} cities={cities} onChange={onChange} onClear={onClear} /><Suspense fallback={<Skeleton className="h-48 w-full" />}><LeadResults userId={user.id} filters={filters} onClear={onClear} onPage={page => { void navigate({ search: previous => ({ ...previous, page }) }); }} /></Suspense></DashboardLayout>;
+  return <DashboardLayout><MetricsStrip metrics={data} /><LeadFilterBar filters={filters} cities={cities} websiteCounts={websiteCounts} onChange={onChange} onClear={onClear} /><Suspense fallback={<Skeleton className="h-48 w-full" />}><LeadResults userId={user.id} filters={filters} onClear={onClear} onPage={page => { void navigate({ search: previous => ({ ...previous, page }) }); }} /></Suspense></DashboardLayout>;
 }
 
 function LeadResults({ userId, filters, onClear, onPage }: { userId: string; filters: LeadFilters; onClear: () => void; onPage: (page: number) => void }) {
   const { data } = useSuspenseQuery(leadsOptions(userId, filters));
   const { data: hasAnyLeads } = useSuspenseQuery(leadExistenceOptions(userId));
-  return <LeadsList rows={data.rows} count={data.count} page={filters.page} hasAnyLeads={hasAnyLeads} onPage={onPage} onClear={onClear} />;
+  return <><p className="text-xs text-muted-foreground" aria-live="polite">{data.count.toLocaleString("pt-BR")} {data.count === 1 ? "lead" : "leads"} com esses filtros</p><LeadsList rows={data.rows} count={data.count} page={filters.page} hasAnyLeads={hasAnyLeads} onPage={onPage} onClear={onClear} /></>;
 }
 
 function MetricsError({ reset }: ErrorComponentProps) {

@@ -15,6 +15,8 @@ export const Route = createFileRoute("/login")({
       { name: "description", content: "Acesse o WebListo CRM para gerenciar seus leads." },
       { property: "og:title", content: "Entrar — WebListo CRM" },
       { property: "og:description", content: "Acesse o WebListo CRM para gerenciar seus leads." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   beforeLoad: async () => {
@@ -24,7 +26,7 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-function LoginPage() {
+export function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,11 +38,19 @@ function LoginPage() {
     setLoading(true);
     setError(null);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError("E-mail ou senha incorretos.");
       return;
     }
+    // Only a successful password login starts this initialization. Restoring or
+    // refreshing the session does not repeat it; RPC failures never block login.
+    try {
+      await supabase.rpc("ensure_default_templates");
+    } catch {
+      // Best-effort initialization: deliberately ignore transport errors too.
+    }
+    setLoading(false);
     navigate({ to: "/", replace: true });
   }
 

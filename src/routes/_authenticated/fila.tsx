@@ -63,7 +63,7 @@ function QueuePage() {
     </div>
     {clicks.isError || queue.isError ? <div role="alert" className="space-y-3 text-sm text-destructive"><p>Não foi possível carregar a fila.</p><Button variant="outline" onClick={() => { void clicks.refetch(); void queue.refetch(); }}>Tentar novamente</Button></div>
       : clicks.isPending || queue.isPending ? <div className="space-y-3"><Skeleton className="h-40 w-full" /><Skeleton className="h-40 w-full" /></div>
-      : slots === 0 ? <p className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">Meta do dia atingida. 🎉</p>
+      : slots === 0 ? <p className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">Meta do dia atingida.</p>
       : items.length === 0 ? <div className="space-y-4 rounded-xl border border-border bg-card p-6 text-center"><p className="text-sm text-muted-foreground">Fila vazia. Importe ou busque mais leads.</p><Button onClick={openImport}>Importar / Sincronizar Leads</Button></div>
       : <ul className="grid gap-3 md:grid-cols-2">{items.map(lead => <QueueCard key={lead.id} lead={lead} onSkip={() => setSkipped(prev => new Set(prev).add(lead.id))} />)}</ul>}
   </div>;
@@ -87,7 +87,7 @@ function QueueCard({ lead, onSkip }: { lead: Lead; onSkip: () => void }) {
     <div className="min-w-0"><p className="break-words font-semibold">{lead.name}</p><p className="text-xs text-muted-foreground">{[lead.subcategory, lead.city].filter(Boolean).join(" · ") || "—"}</p></div>
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
       <span>{lead.whatsapp_number || lead.phone || "—"}</span>
-      <span className="inline-flex items-center gap-1 text-muted-foreground"><Star className="h-3.5 w-3.5 text-primary" />{businessRating(lead.google_rating, lead.google_reviews_count)}</span>
+      <span className="inline-flex items-center gap-1 text-muted-foreground"><Star className="h-3.5 w-3.5 text-primary" />{businessRating(lead)}</span>
       <LeadWebsiteBadge lead={lead} />
     </div>
     <a href={mapsUrl(lead.name, lead.city, lead.google_place_id)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline"><MapPin className="h-3.5 w-3.5" />Ver no Google Maps</a>

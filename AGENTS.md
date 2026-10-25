@@ -10,8 +10,11 @@
 <!-- LOVABLE:END -->
 
 - All app pages live under src/routes/_authenticated/ (client-only gate redirecting to /login); /login is the only public page. Why: single-user internal tool, everything is private.
-- Initialize default message templates only after successful password sign-in, never on session restoration or token refresh. Why: the existing idempotent RPC should run once per login session without blocking access on failure.
+- Initialize default message templates after successful password sign-in, never on session restoration or token refresh; an empty composer template query may call the RPC and refetch once. Why: initialize each login while recovering missing templates only when needed.
 - Dashboard metrics read only the existing lead_metrics view through a user-scoped TanStack Query key; route loaders prime the cache and show bounded pending/error states. Why: private metrics must not cross accounts or stay loading after failure.
 - All application writes must use TanStack Query mutations; the router MutationCache invalidates lead_metrics after every successful mutation. Why: future lead updates and imports automatically refresh the metrics without changing database objects.
 - Lead list filters and pagination live in validated router search state and query the existing leads table through user-scoped keys with the shared ["leads"] prefix; cities are column-only batched reads. Why: filters combine server-side, exact pagination remains shareable, and future actions invalidate all list variants.
 - The app shell provides one shared import dialog to the navbar and empty-list CTA. Why: both entry points must open the same placeholder without duplicating dialogs.
+- Lead actions use browser-owned RLS queries and TanStack mutations, only inserting whatsapp_click events; status events remain trigger-owned. Why: preserve existing schema and avoid double audit entries.
+- WhatsApp opens synchronously once per composer before saving; writes re-read status and use a status-match guard. Why: popup blockers and stale list data must not cause duplicate opens or overwrite newer funnel status.
+- Optimistic status updates affect all cached lead list variants and roll back only the failed lead's attempted status. Why: failures must not revert unrelated concurrent lead changes.

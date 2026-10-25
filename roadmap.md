@@ -1,3 +1,5 @@
+- [ ] Add website type counts, HTTP-only filtering, precedence and current result count without database changes.
+- [ ] Test server-side filter rules and verify the real authenticated filter flow on desktop/mobile.
 - [x] Add business-name drawer entry points and read-only business details with safe website, Instagram and Maps links.
 - [x] Verify detail formatting, existing drawer functionality and desktop/mobile presentation without database changes. 45 focused tests pass; a real authenticated lead opens from its name and notes icon, with existing editors/history preserved and no mobile overflow or runtime errors.
 - [x] Fix API polling lifecycle, five-minute timeout and same-ID manual verification.

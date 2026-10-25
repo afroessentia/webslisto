@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ start: vi.fn(), collect: vi.fn(), pending: vi.fn() }));
+const mocks = vi.hoisted(() => ({ start: vi.fn(), collect: vi.fn(), pending: vi.fn(), history: vi.fn() }));
 vi.mock("@/lib/sync-leads.functions", () => ({ startLeadSearch: mocks.start, collectLeadSearch: mocks.collect }));
 vi.mock("@tanstack/react-start", () => ({ useServerFn: (fn: unknown) => fn }));
 vi.mock("@/lib/api-search", async original => ({
@@ -10,6 +10,10 @@ vi.mock("@/lib/api-search", async original => ({
   pendingSearchesOptions: (id: string) => ({ queryKey: ["search-runs", id], queryFn: mocks.pending }),
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+vi.mock("@/lib/api-search-batch", async original => ({
+  ...await original<typeof import("@/lib/api-search-batch")>(),
+  importedSearchesOptions: (id: string) => ({ queryKey: ["search-runs", id, "imported-history"], queryFn: mocks.history }),
+}));
 // Native select in tests avoids jsdom pointer APIs; production uses the real Select.
 vi.mock("@/components/ui/select", () => ({
   Select: ({ value, onValueChange, disabled, children }: any) => <select aria-label="Nicho" value={value} disabled={disabled} onChange={e => onValueChange(e.target.value)}>{children}</select>,
@@ -27,14 +31,15 @@ async function mount() {
 }
 async function start() {
   fireEvent.change(screen.getByLabelText("Nicho"), { target: { value: "reformas" } });
-  fireEvent.change(screen.getByLabelText("Subcategoria (termo de busca) *"), { target: { value: "fontanero" } });
-  fireEvent.change(screen.getByLabelText("Cidade *"), { target: { value: "Tarragona" } });
-  fireEvent.click(screen.getByRole("button", { name: /^Buscar$/ }));
+  fireEvent.click(screen.getByRole("button", { name: "fontanero" }));
+  fireEvent.click(screen.getByRole("button", { name: "Tarragona" }));
+  fireEvent.click(screen.getByRole("button", { name: "Iniciar buscas" }));
   await flush();
 }
 beforeEach(() => {
   vi.useFakeTimers(); vi.resetAllMocks();
   mocks.pending.mockResolvedValue([]);
+  mocks.history.mockResolvedValue([]);
   mocks.start.mockResolvedValue({ searchId: "same-id", status: "running" });
   mocks.collect.mockResolvedValue({ status: "running" });
 });
@@ -44,12 +49,12 @@ it("polls under StrictMode and preserves the ID for one manual collect after tim
   await mount(); await start();
   expect(mocks.start).toHaveBeenCalledTimes(1);
   expect(screen.queryByText("A busca demorou demais. Tente novamente mais tarde.")).toBeNull();
-  expect(screen.getByRole("button", { name: /^Buscar$/ })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Iniciar buscas" })).toBeDisabled();
   await act(async () => { await vi.advanceTimersByTimeAsync(299999); });
   expect(screen.queryByText("A busca demorou demais. Tente novamente mais tarde.")).toBeNull();
   await act(async () => { await vi.advanceTimersByTimeAsync(1); });
   expect(screen.getByRole("alert")).toHaveTextContent("A busca demorou demais");
-  expect(screen.getByRole("button", { name: /^Buscar$/ })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Iniciar buscas" })).toBeDisabled();
   const count = mocks.collect.mock.calls.length;
   await act(async () => { await vi.advanceTimersByTimeAsync(300000); });
   expect(mocks.collect).toHaveBeenCalledTimes(count);

@@ -16,11 +16,9 @@ Si prefieres que no te escriba más, dímelo y no vuelvo a molestar. ¡Gracias!`
   },
   oferta_directa_79: {
     title: "Proposta com preços",
-    body: `Gracias por tu interés. Para que te hagas una idea, tenemos opciones desde 79 € (precio de lanzamiento, hasta fin de año), según lo que necesite {nombre_negocio}.
+    body: `¡Perfecto! Te envío la propuesta con los paquetes y precios para que veas cuál encaja mejor con {nombre_negocio}. Está todo explicado: qué incluye cada opción, cómo funciona y las condiciones.
 
-¿Te cuento cuál encajaría mejor en vuestro caso?
-
-Si prefieres que no te escriba más, dímelo y no vuelvo a molestar. ¡Gracias!`,
+Échale un vistazo con calma y cualquier duda me dices por aquí. ¡Gracias!`,
   },
 };
 export function editorBody(value: string) { return value.replace(/\\n/g, "\n"); }

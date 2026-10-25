@@ -2,6 +2,8 @@ import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Lead } from "@/lib/leads";
+import { automaticFollowUp, localDate } from "@/lib/follow-up-dates";
+export { localDate } from "@/lib/follow-up-dates";
 
 export type CopyKey = Tables<"message_templates">["key"];
 export type LeadStatus = Lead["status"];
@@ -11,10 +13,6 @@ export function renderMessage(body: string, lead: Pick<Lead, "name" | "city" | "
   const values: Record<string, string> = { nombre_negocio: lead.name ?? "", ciudad: lead.city ?? "", subcategoria: lead.subcategory ?? "" };
   return body.replace(/\{(nombre_negocio|ciudad|subcategoria)\}/g, (_, key: string) => values[key] ?? "")
     .replace(/\\n/g, "\n").replace(/ {2,}/g, " ");
-}
-
-export function localDate(date = new Date()) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
 export function whatsappDisabledReason(lead: Pick<Lead, "status" | "is_mobile" | "whatsapp_number">) {
@@ -67,6 +65,15 @@ export async function saveWhatsappClick(lead: Lead, copy: CopyKey) {
 }
 
 export async function saveLeadStatus(leadId: string, status: LeadStatus) {
+  const followUp = automaticFollowUp(status);
+  if (followUp) {
+    // Atomically set status and a default date only while the date is empty.
+    // A concurrent manual date must never be overwritten by an older snapshot.
+    const scheduled = await supabase.from("leads").update({ status, follow_up_date: followUp })
+      .eq("id", leadId).is("follow_up_date", null).select("id");
+    if (scheduled.error) throw scheduled.error;
+    if (scheduled.data?.length) return;
+  }
   const result = await supabase.from("leads").update({ status }).eq("id", leadId).select("id").single();
   if (result.error) throw result.error;
 }

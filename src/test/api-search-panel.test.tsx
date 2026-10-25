@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ start: vi.fn(), collect: vi.fn(), pending: vi.fn() }));
+const mocks = vi.hoisted(() => ({ start: vi.fn(), collect: vi.fn(), pending: vi.fn(), history: vi.fn() }));
 vi.mock("@/lib/sync-leads.functions", () => ({ startLeadSearch: mocks.start, collectLeadSearch: mocks.collect }));
 vi.mock("@tanstack/react-start", () => ({ useServerFn: (fn: unknown) => fn }));
 vi.mock("@/lib/api-search", async original => ({
@@ -10,6 +10,11 @@ vi.mock("@/lib/api-search", async original => ({
   pendingSearchesOptions: (id: string) => ({ queryKey: ["search-runs", id], queryFn: mocks.pending }),
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+vi.mock("@/components/ui/checkbox", () => ({ Checkbox: ({ checked, onCheckedChange, ...props }: any) => <input type="checkbox" checked={checked} onChange={event => onCheckedChange(event.target.checked)} {...props} /> }));
+vi.mock("@/lib/api-search-batch", async original => ({
+  ...await original<typeof import("@/lib/api-search-batch")>(),
+  importedSearchesOptions: (id: string) => ({ queryKey: ["search-runs", id, "imported-history"], queryFn: mocks.history }),
+}));
 // Native select in tests avoids jsdom pointer APIs; production uses the real Select.
 vi.mock("@/components/ui/select", () => ({
   Select: ({ value, onValueChange, disabled, children }: any) => <select aria-label="Nicho" value={value} disabled={disabled} onChange={e => onValueChange(e.target.value)}>{children}</select>,
@@ -27,14 +32,15 @@ async function mount() {
 }
 async function start() {
   fireEvent.change(screen.getByLabelText("Nicho"), { target: { value: "reformas" } });
-  fireEvent.change(screen.getByLabelText("Subcategoria (termo de busca) *"), { target: { value: "fontanero" } });
-  fireEvent.change(screen.getByLabelText("Cidade *"), { target: { value: "Tarragona" } });
-  fireEvent.click(screen.getByRole("button", { name: /^Buscar$/ }));
+  fireEvent.click(screen.getByRole("button", { name: "fontanero" }));
+  fireEvent.click(screen.getByRole("button", { name: "Tarragona" }));
+  fireEvent.click(screen.getByRole("button", { name: "Iniciar buscas" }));
   await flush();
 }
 beforeEach(() => {
   vi.useFakeTimers(); vi.resetAllMocks();
   mocks.pending.mockResolvedValue([]);
+  mocks.history.mockResolvedValue([]);
   mocks.start.mockResolvedValue({ searchId: "same-id", status: "running" });
   mocks.collect.mockResolvedValue({ status: "running" });
 });
@@ -44,12 +50,12 @@ it("polls under StrictMode and preserves the ID for one manual collect after tim
   await mount(); await start();
   expect(mocks.start).toHaveBeenCalledTimes(1);
   expect(screen.queryByText("A busca demorou demais. Tente novamente mais tarde.")).toBeNull();
-  expect(screen.getByRole("button", { name: /^Buscar$/ })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Iniciar buscas" })).toBeDisabled();
   await act(async () => { await vi.advanceTimersByTimeAsync(299999); });
   expect(screen.queryByText("A busca demorou demais. Tente novamente mais tarde.")).toBeNull();
   await act(async () => { await vi.advanceTimersByTimeAsync(1); });
   expect(screen.getByRole("alert")).toHaveTextContent("A busca demorou demais");
-  expect(screen.getByRole("button", { name: /^Buscar$/ })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Iniciar buscas" })).toBeDisabled();
   const count = mocks.collect.mock.calls.length;
   await act(async () => { await vi.advanceTimersByTimeAsync(300000); });
   expect(mocks.collect).toHaveBeenCalledTimes(count);
@@ -62,7 +68,7 @@ it("polls under StrictMode and preserves the ID for one manual collect after tim
 it("shows the exact start error and never collects or shows timeout", async () => {
   mocks.start.mockResolvedValue({ error: "Limite diário de 25 buscas atingido" });
   await mount(); await start();
-  expect(screen.getByRole("alert")).toHaveTextContent("Limite diário de 25 buscas atingido");
+  expect(screen.getByText(/Falhou \(Limite diário de 25 buscas atingido/)).toBeInTheDocument();
   expect(mocks.collect).not.toHaveBeenCalled();
   expect(screen.getByLabelText("Depuração da busca")).toHaveTextContent("Limite diário de 25 buscas atingido");
 });
@@ -80,5 +86,35 @@ it("verifies recovery rows one at a time and refreshes leads and metrics without
   expect(screen.getByText("4 novos, 2 duplicados")).toBeInTheDocument();
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ["leads"] });
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ["lead_metrics"] });
+  expect(invalidate).toHaveBeenCalledWith({ queryKey: ["lead-cities"] });
   expect(mocks.start).not.toHaveBeenCalled();
+});
+
+it("skips recently imported combinations and includes them only after explicit opt-in", async () => {
+  mocks.history.mockResolvedValue([{ niche: "reformas", subcategory: "fontanero", city: "Tarragona", created_at: new Date(Date.now() - 86400000).toISOString() }]);
+  await mount();
+  fireEvent.change(screen.getByLabelText("Nicho"), { target: { value: "reformas" } });
+  fireEvent.click(screen.getByRole("button", { name: "fontanero" }));
+  fireEvent.click(screen.getByRole("button", { name: "Tarragona" }));
+  expect(screen.getByRole("button", { name: "Iniciar buscas" })).toBeDisabled();
+  expect(screen.getByText("0 buscas (termos x cidades), até 0 resultados no total")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("checkbox", { name: "Incluir buscas repetidas" }));
+  expect(screen.getByRole("button", { name: "Iniciar buscas" })).toBeEnabled();
+  expect(screen.getByText("1 buscas (termos x cidades), até 30 resultados no total")).toBeInTheDocument();
+  expect(mocks.start).not.toHaveBeenCalled();
+});
+
+it("finishes the current search when stopped, updates totals and never starts the waiting item", async () => {
+  mocks.collect.mockResolvedValue({ status: "imported", found: 30, inserted: 24, duplicates: 6 });
+  await mount();
+  fireEvent.change(screen.getByLabelText("Nicho"), { target: { value: "reformas" } });
+  fireEvent.click(screen.getByRole("button", { name: "fontanero" }));
+  fireEvent.click(screen.getByRole("button", { name: "Tarragona" }));
+  fireEvent.click(screen.getByRole("button", { name: "Reus" }));
+  fireEvent.click(screen.getByRole("button", { name: "Iniciar buscas" })); await flush();
+  fireEvent.click(screen.getByRole("button", { name: "Parar após a busca atual" }));
+  await act(async () => { await vi.advanceTimersByTimeAsync(5000); }); await flush();
+  expect(mocks.start).toHaveBeenCalledTimes(1);
+  expect(screen.getByText("30 encontrados, 24 novos, 6 duplicados ignorados")).toBeInTheDocument();
+  expect(screen.getByText("Aguardando")).toBeInTheDocument();
 });

@@ -1,3 +1,6 @@
+- [ ] Fix API polling lifecycle, five-minute timeout and same-ID manual verification.
+- [ ] Add last-seven-days pending recovery and temporary debug status.
+- [ ] Test timing, errors and single-call recovery; verify the dialog.
 - [x] Add server-side lead filters, escaping, debounced search, and pagination.
 - [x] Add desktop table, mobile cards, badges, tooltips, and distinct empty states.
 - [x] Verify rules with tests and authenticated desktop/mobile checks without database changes. Actual account has no leads; populated table/pagination verified using browser-only fixtures.

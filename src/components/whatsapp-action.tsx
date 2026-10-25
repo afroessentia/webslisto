@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, MessageCircle, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -11,22 +11,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Lead } from "@/lib/leads";
 import { copyLabels, invalidateLeadActions, renderMessage, saveWhatsappClick, templatesOptions, whatsappDisabledReason, whatsappUrl, type CopyKey } from "@/lib/lead-actions";
 
-export function WhatsappAction({ lead }: { lead: Lead }) {
+export function WhatsappAction({ lead, defaultCopy }: { lead: Lead; defaultCopy?: CopyKey }) {
   const [open, setOpen] = useState(false);
   const reason = whatsappDisabledReason(lead);
   return <>
     <Tooltip><TooltipTrigger asChild><span tabIndex={reason ? 0 : undefined} className="inline-flex max-w-full"><Button size="sm" disabled={reason !== null} onClick={() => setOpen(true)} className="px-2 text-xs"><MessageCircle className="h-3.5 w-3.5" /> WhatsApp</Button></span></TooltipTrigger><TooltipContent>{reason ?? "Enviar mensagem"}</TooltipContent></Tooltip>
-    <Dialog open={open} onOpenChange={setOpen}>{open && <MessageComposer lead={lead} onClose={() => setOpen(false)} />}</Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>{open && <MessageComposer lead={lead} defaultCopy={defaultCopy} onClose={() => setOpen(false)} />}</Dialog>
   </>;
 }
 
-function MessageComposer({ lead, onClose }: { lead: Lead; onClose: () => void }) {
+function MessageComposer({ lead, defaultCopy, onClose }: { lead: Lead; defaultCopy?: CopyKey | undefined; onClose: () => void }) {
   const client = useQueryClient();
   const query = useQuery(templatesOptions(lead.owner_id));
   const [copy, setCopy] = useState<CopyKey | null>(null);
   const [message, setMessage] = useState("");
   const saving = useRef(false);
   const opened = useRef(false);
+  useEffect(() => {
+    if (copy || !defaultCopy || !query.data) return;
+    const template = query.data.find(item => item.key === defaultCopy);
+    if (template) { setCopy(defaultCopy); setMessage(renderMessage(template.body, lead)); }
+  }, [copy, defaultCopy, query.data, lead]);
   const mutation = useMutation({
     mutationFn: (key: CopyKey) => saveWhatsappClick(lead, key),
     retry: false,

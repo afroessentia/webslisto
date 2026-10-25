@@ -86,5 +86,35 @@ it("verifies recovery rows one at a time and refreshes leads and metrics without
   expect(screen.getByText("4 novos, 2 duplicados")).toBeInTheDocument();
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ["leads"] });
   expect(invalidate).toHaveBeenCalledWith({ queryKey: ["lead_metrics"] });
+  expect(invalidate).toHaveBeenCalledWith({ queryKey: ["lead-cities"] });
   expect(mocks.start).not.toHaveBeenCalled();
+});
+
+it("skips recently imported combinations and includes them only after explicit opt-in", async () => {
+  mocks.history.mockResolvedValue([{ niche: "reformas", subcategory: "fontanero", city: "Tarragona", created_at: new Date(Date.now() - 86400000).toISOString() }]);
+  await mount();
+  fireEvent.change(screen.getByLabelText("Nicho"), { target: { value: "reformas" } });
+  fireEvent.click(screen.getByRole("button", { name: "fontanero" }));
+  fireEvent.click(screen.getByRole("button", { name: "Tarragona" }));
+  expect(screen.getByRole("button", { name: "Iniciar buscas" })).toBeDisabled();
+  expect(screen.getByText("0 buscas (termos x cidades), até 0 resultados no total")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("checkbox", { name: "Incluir buscas repetidas" }));
+  expect(screen.getByRole("button", { name: "Iniciar buscas" })).toBeEnabled();
+  expect(screen.getByText("1 buscas (termos x cidades), até 30 resultados no total")).toBeInTheDocument();
+  expect(mocks.start).not.toHaveBeenCalled();
+});
+
+it("finishes the current search when stopped, updates totals and never starts the waiting item", async () => {
+  mocks.collect.mockResolvedValue({ status: "imported", found: 30, inserted: 24, duplicates: 6 });
+  await mount();
+  fireEvent.change(screen.getByLabelText("Nicho"), { target: { value: "reformas" } });
+  fireEvent.click(screen.getByRole("button", { name: "fontanero" }));
+  fireEvent.click(screen.getByRole("button", { name: "Tarragona" }));
+  fireEvent.click(screen.getByRole("button", { name: "Reus" }));
+  fireEvent.click(screen.getByRole("button", { name: "Iniciar buscas" })); await flush();
+  fireEvent.click(screen.getByRole("button", { name: "Parar após a busca atual" }));
+  await act(async () => { await vi.advanceTimersByTimeAsync(5000); }); await flush();
+  expect(mocks.start).toHaveBeenCalledTimes(1);
+  expect(screen.getByText("30 encontrados, 24 novos, 6 duplicados ignorados")).toBeInTheDocument();
+  expect(screen.getByText("Aguardando")).toBeInTheDocument();
 });

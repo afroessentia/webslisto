@@ -20,6 +20,7 @@ export function ApiSearchPanel({ onClose, onBusy, ownerId, active }: {
   const collect = useServerFn(collectLeadSearch);
   const queryClient = useQueryClient();
   const pending = useQuery({ ...pendingSearchesOptions(ownerId), enabled: active });
+  const [verifiedRows, setVerifiedRows] = useState<NonNullable<typeof pending.data>>([]);
   const [niche, setNiche] = useState("");
   const [subcategory, setSubcategory] = useState("");
   const [city, setCity] = useState("");
@@ -101,7 +102,7 @@ export function ApiSearchPanel({ onClose, onBusy, ownerId, active }: {
   });
 
   const busy = mutation.isPending;
-  const pendingRows = pending.data ?? [];
+  const pendingRows = [...(pending.data ?? []), ...verifiedRows.filter(row => !pending.data?.some(current => current.id === row.id))];
   const unresolved = pendingRows.some(row => !["imported", "failed"].includes(outcomes[row.id]?.status ?? "running"));
   const blocked = busy || Boolean(searchId) || unresolved || pending.isFetching || Boolean(pending.error);
   const valid = Boolean(niche && subcategory.trim() && city.trim());
@@ -109,6 +110,10 @@ export function ApiSearchPanel({ onClose, onBusy, ownerId, active }: {
     if (operation.current || (action.kind === "start" && (blocked || !valid))) return;
     const controller = new AbortController();
     operation.current = controller;
+    if (action.kind === "verify") {
+      const row = pendingRows.find(current => current.id === action.searchId);
+      if (row) setVerifiedRows(previous => previous.some(current => current.id === row.id) ? previous : [...previous, row]);
+    }
     onBusy(true); setError(""); setResult(null);
     mutation.mutate({ action, controller });
   }

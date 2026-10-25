@@ -5,7 +5,7 @@ import type { Lead } from "@/lib/leads";
 
 export type CopyKey = Tables<"message_templates">["key"];
 export type LeadStatus = Lead["status"];
-export const copyLabels: Record<CopyKey, string> = { demo_gratis: "Demo gratuita", oferta_directa_79: "Oferta direta 79 €" };
+export const copyLabels: Record<CopyKey, string> = { demo_gratis: "Demo gratuita", oferta_directa_79: "Proposta com preços" };
 
 export function renderMessage(body: string, lead: Pick<Lead, "name" | "city" | "subcategory">) {
   const values: Record<string, string> = { nombre_negocio: lead.name ?? "", ciudad: lead.city ?? "", subcategoria: lead.subcategory ?? "" };
@@ -31,7 +31,7 @@ export function sendUpdate(status: LeadStatus, copy: CopyKey, date = new Date())
   const fields: { selected_copy: CopyKey; last_contact_date: string; status?: LeadStatus } = {
     selected_copy: copy, last_contact_date: localDate(date),
   };
-  if (copy === "demo_gratis" && (status === "nuevo" || status === "calificado")) fields.status = "demo_enviada";
+  if (copy === "demo_gratis" && status === "nuevo") fields.status = "calificado";
   return fields;
 }
 

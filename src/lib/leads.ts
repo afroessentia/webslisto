@@ -31,7 +31,7 @@ export function pageRange(page: number) {
 }
 
 export const statusLabels = {
-  nuevo: "Novo", calificado: "Qualificado", demo_enviada: "Demo enviada",
+  nuevo: "Novo", calificado: "Contactado", demo_enviada: "Demo enviada",
   en_conversacion: "Em conversa", ganado: "Fechado", descartado: "Descartado", no_contactar: "Não contatar",
 } as const;
 

@@ -43,7 +43,7 @@ describe("Message template rules", () => {
     const saved = { demo_gratis: { ...templateDefaults.demo_gratis }, oferta_directa_79: { ...templateDefaults.oferta_directa_79 } };
     const drafts = { ...saved, oferta_directa_79: { title: "Alterado", body: "Novo texto" } };
     expect(draftsChanged(drafts, saved)).toBe(true);
-    expect(saved.oferta_directa_79.title).toBe("Oferta direta 79 €");
+    expect(saved.oferta_directa_79.title).toBe("Proposta com preços");
     expect(draftsChanged(saved, saved)).toBe(false);
   });
   it("updates title and body for the current key without changing key or owner", async () => {

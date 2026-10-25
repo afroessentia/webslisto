@@ -22,7 +22,7 @@ export function MessageTemplatesEditor({ ownerId, onClose }: { ownerId: string; 
   function requestClose() { if (saving) return; if (dirty) setConfirmClose(true); else onClose(); }
   return <>
     <Sheet open onOpenChange={open => { if (!open) requestClose(); }}><SheetContent className="w-full overflow-y-auto bg-card px-5 sm:max-w-3xl sm:px-7 motion-reduce:animate-none">
-      <SheetHeader className="pr-7 text-left"><SheetTitle>Modelos de Mensagem</SheetTitle><SheetDescription className="sr-only">Demo gratuita e Oferta direta 79 €</SheetDescription></SheetHeader>
+      <SheetHeader className="pr-7 text-left"><SheetTitle>Modelos de Mensagem</SheetTitle><SheetDescription className="sr-only">Demo gratuita e Proposta com preços</SheetDescription></SheetHeader>
       {query.isPending ? <div className="mt-6 space-y-5" aria-label="Carregando modelos"><Skeleton className="h-10 w-full" /><Skeleton className="h-72 w-full" /></div> : query.isError || query.data.length < 2 ? <div role="alert" className="mt-6 space-y-3"><p className="text-sm text-destructive">Não foi possível carregar os modelos.</p><Button variant="outline" onClick={() => void query.refetch()}>Tentar novamente</Button></div> : <TemplateForm rows={query.data} ownerId={ownerId} onDirty={setDirty} onSaving={setSaving} />}
     </SheetContent></Sheet>
     <AlertDialog open={confirmClose} onOpenChange={setConfirmClose}><AlertDialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg"><AlertDialogHeader><AlertDialogTitle>Descartar alterações?</AlertDialogTitle><AlertDialogDescription>Há alterações não salvas nos modelos de mensagem.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Continuar editando</AlertDialogCancel><AlertDialogAction onClick={onClose}>Descartar alterações</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
@@ -63,7 +63,7 @@ function TemplateForm({ rows, ownerId, onDirty, onSaving }: { rows: Tables<"mess
   }
   return <>
     <Tabs value={active} onValueChange={value => setActive(value as TemplateKey)} className="mt-6">
-      <TabsList className="grid h-auto w-full grid-cols-2"><TabsTrigger value="demo_gratis" className="whitespace-normal">Demo gratuita</TabsTrigger><TabsTrigger value="oferta_directa_79" className="whitespace-normal">Oferta direta 79 €</TabsTrigger></TabsList>
+      <TabsList className="grid h-auto w-full grid-cols-2"><TabsTrigger value="demo_gratis" className="whitespace-normal">Demo gratuita</TabsTrigger><TabsTrigger value="oferta_directa_79" className="whitespace-normal">Proposta com preços</TabsTrigger></TabsList>
       {templateKeys.map(key => {
         const draft = drafts[key];
         const unknown = unknownTemplateTags(draft.body);

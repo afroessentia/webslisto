@@ -11,3 +11,5 @@
 
 - All app pages live under src/routes/_authenticated/ (client-only gate redirecting to /login); /login is the only public page. Why: single-user internal tool, everything is private.
 - Initialize default message templates only after successful password sign-in, never on session restoration or token refresh. Why: the existing idempotent RPC should run once per login session without blocking access on failure.
+- Dashboard metrics read only the existing lead_metrics view through a user-scoped TanStack Query key; route loaders prime the cache and show bounded pending/error states. Why: private metrics must not cross accounts or stay loading after failure.
+- All application writes must use TanStack Query mutations; the router MutationCache invalidates lead_metrics after every successful mutation. Why: future lead updates and imports automatically refresh the metrics without changing database objects.

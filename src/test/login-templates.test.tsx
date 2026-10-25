@@ -17,6 +17,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
 vi.mock("@/components/app-shell", () => ({ Logo: () => null }));
 
 import { LoginPage } from "@/routes/login";
+import { defaultLeadFilters } from "@/lib/leads";
 
 function submitLogin() {
   fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "test@example.com" } });
@@ -36,7 +37,7 @@ describe("Default templates after login", () => {
     const view = render(<LoginPage />);
     expect(mocks.rpc).not.toHaveBeenCalled();
     submitLogin();
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/", replace: true }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/", search: defaultLeadFilters, replace: true }));
     view.rerender(<LoginPage />);
     expect(mocks.rpc).toHaveBeenCalledExactlyOnceWith("ensure_default_templates");
     expect(mocks.signInWithPassword).toHaveBeenCalledExactlyOnceWith({ email: "test@example.com", password: "test-password" });
@@ -56,7 +57,7 @@ describe("Default templates after login", () => {
     else mocks.rpc.mockRejectedValue(new Error("Network failed"));
     render(<LoginPage />);
     submitLogin();
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/", replace: true }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/", search: defaultLeadFilters, replace: true }));
     expect(mocks.rpc).toHaveBeenCalledExactlyOnceWith("ensure_default_templates");
     expect(screen.queryByText("E-mail ou senha incorretos.")).not.toBeInTheDocument();
   });

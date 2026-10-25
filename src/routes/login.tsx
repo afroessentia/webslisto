@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/app-shell";
+import { defaultLeadFilters } from "@/lib/leads";
 
 export const Route = createFileRoute("/login")({
   ssr: false,
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/login")({
   }),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
-    if (data.user) throw redirect({ to: "/" });
+    if (data.user) throw redirect({ to: "/", search: defaultLeadFilters });
   },
   component: LoginPage,
 });
@@ -51,7 +52,7 @@ export function LoginPage() {
       // Best-effort initialization: deliberately ignore transport errors too.
     }
     setLoading(false);
-    navigate({ to: "/", replace: true });
+    navigate({ to: "/", search: defaultLeadFilters, replace: true });
   }
 
   return (

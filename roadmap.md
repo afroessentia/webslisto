@@ -1,3 +1,6 @@
+- [x] Add Acompanhamentos with three dated sections, conversation links, postponement and existing notes/status controls.
+- [x] Apply automatic follow-up dates through shared status actions without overwriting existing dates.
+- [x] Test date/query/write rules and verify authenticated follow-up navigation and actions. All 152 tests passed; build OK. Real account currently has zero matching follow-ups; populated mobile cards, postponement/readback, status preservation and notes verified with intercepted browser-only data, not live lead writes. No runtime errors or mobile overflow; no database objects changed.
 - [x] Add owner-scoped CSV phone checks in chunks of 100, preview count and separate final duplicate totals. 19 focused tests pass; authenticated import with an existing phone shows 1 preview duplicate and 0 new / 0 ID duplicates / 1 phone duplicate, with zero database writes and no runtime errors. Build OK; no database changes.
 - [x] Add required niche, multi-term/city selection, recent-search exclusion and batch summary.
 - [x] Run serialized searches using existing polling, stop/pending recovery and totals without backend/database changes.

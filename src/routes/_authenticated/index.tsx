@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter, type ErrorComponentProps } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { useQueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { ListChecks, RefreshCw } from "lucide-react";
+import { CalendarClock, ListChecks, RefreshCw } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { MetricsStrip } from "@/components/metrics-strip";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/_authenticated/")({
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold sm:text-3xl">Painel</h1><Button asChild variant="outline"><Link to="/fila"><ListChecks />Fila de hoje</Link></Button></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold sm:text-3xl">Painel</h1><div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link to="/fila"><ListChecks />Fila de hoje</Link></Button><Button asChild variant="outline"><Link to="/acompanhar"><CalendarClock />Acompanhamentos</Link></Button></div></div>
       {children}
     </div>
   );

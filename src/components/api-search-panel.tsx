@@ -45,6 +45,7 @@ export function ApiSearchPanel({ onClose, onBusy, ownerId, active }: {
     mutationFn: async ({ action, controller }: { action: Action; controller: AbortController }) => {
       let id = action.kind === "verify" ? action.searchId : null;
       let last: SyncResult | null = null;
+      let finalResponse: SyncResult | null = null;
       const record = (response: SyncResult) => {
         last = response;
         setDebugCollect(`${response.status ?? "erro"}${response.error ? `: ${response.error}` : ""}`);
@@ -66,13 +67,15 @@ export function ApiSearchPanel({ onClose, onBusy, ownerId, active }: {
           void queryClient.invalidateQueries({ queryKey: ["search-runs", ownerId] });
           const response = await pollLeadSearch({ searchId: id, startedAt, collect: searchId => collect({ data: { searchId } }), signal: controller.signal, onResponse: record });
           if (!response) { setPhase("pending"); setError(TIMEOUT_MESSAGE); return; }
+          finalResponse = response;
         } else {
           const response = await collect({ data: { searchId: action.searchId } });
+          finalResponse = response;
           record(response);
           if (response.error) throw new Error(response.error);
           if (response.status === "failed") throw new Error("Busca falhou");
         }
-        const response: SyncResult | null = last;
+        const response = finalResponse;
         if (response?.status === "imported") {
           setResult(response); setPhase("done");
           setSearchId(current => current === id ? null : current);

@@ -1,3 +1,3 @@
-- [ ] Add server-side lead filters, escaping, debounced search, and pagination.
-- [ ] Add desktop table, mobile cards, badges, tooltips, and distinct empty states.
-- [ ] Verify rules with tests and authenticated desktop/mobile checks without database changes.
+- [x] Add server-side lead filters, escaping, debounced search, and pagination.
+- [x] Add desktop table, mobile cards, badges, tooltips, and distinct empty states.
+- [x] Verify rules with tests and authenticated desktop/mobile checks without database changes. Actual account has no leads; populated table/pagination verified using browser-only fixtures.

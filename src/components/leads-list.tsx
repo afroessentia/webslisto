@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight, PhoneOff, Plus, SearchX, Users } from "lucid
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { WebBadge } from "@/components/lead-badges";
+import { LeadWebsiteBadge } from "@/components/lead-website";
 import { LeadStatusSelector } from "@/components/lead-status-selector";
 import { WhatsappAction } from "@/components/whatsapp-action";
 import { LeadNotesDrawer } from "@/components/lead-notes-drawer";
@@ -31,12 +31,12 @@ export function LeadsList({ rows, count, page, hasAnyLeads, onPage, onClear }: {
       <div className="hidden lg:block"><Table className="table-fixed"><TableHeader><TableRow>
         <TableHead className="w-[18%]">Negócio</TableHead><TableHead className="w-[8%]">Cidade</TableHead><TableHead className="w-[14%]">Telefone</TableHead><TableHead className="w-[12%]">Web</TableHead><TableHead className="w-[10%]">Avaliação Google</TableHead><TableHead className="w-[14%]">Status</TableHead><TableHead className="w-[11%]">Último contato</TableHead><TableHead className="w-[13%]">Ações</TableHead>
       </TableRow></TableHeader><TableBody>{rows.map(lead => <TableRow key={lead.id} className="[&>td]:py-4 [&>td]:break-words">
-        <TableCell><div className="font-semibold">{lead.name}</div>{lead.subcategory && <div className="mt-1 text-xs text-muted-foreground">{lead.subcategory}</div>}</TableCell><TableCell>{lead.city || "—"}</TableCell><TableCell><Phone lead={lead} /></TableCell><TableCell><WebBadge value={lead.website_status} /></TableCell><TableCell><Rating lead={lead} /></TableCell><TableCell><LeadStatusSelector lead={lead} /></TableCell><TableCell className="text-xs">{formatContactDate(lead.last_contact_date)}</TableCell><TableCell><div className="flex flex-wrap items-center gap-1"><WhatsappAction lead={lead} /><LeadNotesDrawer lead={lead} /></div></TableCell>
+        <TableCell><LeadNotesDrawer lead={lead} trigger="name" />{lead.subcategory && <div className="mt-1 text-xs text-muted-foreground">{lead.subcategory}</div>}</TableCell><TableCell>{lead.city || "—"}</TableCell><TableCell><Phone lead={lead} /></TableCell><TableCell><LeadWebsiteBadge lead={lead} /></TableCell><TableCell><Rating lead={lead} /></TableCell><TableCell><LeadStatusSelector lead={lead} /></TableCell><TableCell className="text-xs">{formatContactDate(lead.last_contact_date)}</TableCell><TableCell><div className="flex flex-wrap items-center gap-1"><WhatsappAction lead={lead} /><LeadNotesDrawer lead={lead} /></div></TableCell>
       </TableRow>)}</TableBody></Table></div>
       <div className="grid gap-3 lg:hidden">{rows.map(lead => <article key={lead.id} className="min-w-0 rounded-xl border border-border bg-card p-4">
-        <h3 className="break-words font-semibold">{lead.name}</h3>{lead.subcategory && <p className="mt-1 text-xs text-muted-foreground">{lead.subcategory}</p>}
+        <h3 className="break-words font-semibold"><LeadNotesDrawer lead={lead} trigger="name" /></h3>{lead.subcategory && <p className="mt-1 text-xs text-muted-foreground">{lead.subcategory}</p>}
         <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-4 text-sm [&_dt]:mb-1 [&_dt]:text-xs [&_dt]:text-muted-foreground [&_dd]:break-words">
-          <div><dt>Cidade</dt><dd>{lead.city || "—"}</dd></div><div><dt>Telefone</dt><dd><Phone lead={lead} /></dd></div><div><dt>Web</dt><dd><WebBadge value={lead.website_status} /></dd></div><div><dt>Avaliação Google</dt><dd><Rating lead={lead} /></dd></div><div><dt>Status</dt><dd><LeadStatusSelector lead={lead} /></dd></div><div><dt>Último contato</dt><dd>{formatContactDate(lead.last_contact_date)}</dd></div><div className="col-span-2 border-t border-border pt-3"><dt>Ações</dt><dd className="flex items-center gap-2"><WhatsappAction lead={lead} /><LeadNotesDrawer lead={lead} /></dd></div>
+          <div><dt>Cidade</dt><dd>{lead.city || "—"}</dd></div><div><dt>Telefone</dt><dd><Phone lead={lead} /></dd></div><div><dt>Web</dt><dd><LeadWebsiteBadge lead={lead} /></dd></div><div><dt>Avaliação Google</dt><dd><Rating lead={lead} /></dd></div><div><dt>Status</dt><dd><LeadStatusSelector lead={lead} /></dd></div><div><dt>Último contato</dt><dd>{formatContactDate(lead.last_contact_date)}</dd></div><div className="col-span-2 border-t border-border pt-3"><dt>Ações</dt><dd className="flex items-center gap-2"><WhatsappAction lead={lead} /><LeadNotesDrawer lead={lead} /></dd></div>
         </dl>
       </article>)}</div>
     </>}

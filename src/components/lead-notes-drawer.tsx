@@ -15,14 +15,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { webLabels } from "@/components/lead-badges";
+import { LeadBusinessDetails } from "@/components/lead-business-details";
 import { invalidateLeadActions } from "@/lib/lead-actions";
 import type { Lead } from "@/lib/leads";
 import { historyDate, historyText, instagramUrl, leadHistoryOptions, mapsUrl, notesFields, notesPatch, safeHttpUrl, saveLeadNotes, type NotesFields } from "@/lib/lead-notes";
 
-export function LeadNotesDrawer({ lead }: { lead: Lead }) {
+export function LeadNotesDrawer({ lead, trigger = "notes" }: { lead: Lead; trigger?: "notes" | "name" }) {
   const [open, setOpen] = useState(false);
   return <Sheet open={open} onOpenChange={setOpen}>
-    <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground" aria-label={`Notas de ${lead.name}`} onClick={() => setOpen(true)}><StickyNote className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent>Notas do lead</TooltipContent></Tooltip>
+    {trigger === "name" ? <Button variant="link" className="h-auto max-w-full justify-start whitespace-normal p-0 text-left font-semibold text-foreground hover:text-primary" aria-label={`Ver detalhes de ${lead.name}`} onClick={() => setOpen(true)}>{lead.name}</Button> : <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground" aria-label={`Notas de ${lead.name}`} onClick={() => setOpen(true)}><StickyNote className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent>Notas do lead</TooltipContent></Tooltip>}
     {open && <NotesEditor lead={lead} />}
   </Sheet>;
 }
@@ -49,6 +50,7 @@ function NotesEditor({ lead }: { lead: Lead }) {
   const instagram = instagramUrl(draft.instagram_handle);
   return <SheetContent className="w-full overflow-y-auto bg-card px-5 sm:max-w-lg sm:px-6 motion-reduce:animate-none">
     <SheetHeader className="pr-7 text-left"><SheetTitle className="break-words">{lead.name}</SheetTitle><SheetDescription className="break-words">{lead.city || "—"}</SheetDescription></SheetHeader>
+    <LeadBusinessDetails lead={lead} />
     <form className="mt-6 space-y-5" onSubmit={event => { event.preventDefault(); if (Object.keys(patch).length && !mutation.isPending) mutation.mutate(patch); }}>
       <fieldset disabled={mutation.isPending} className="min-w-0 space-y-5">
         <div className="space-y-2"><Label htmlFor={`${id}-notes`}>Notas</Label><Textarea id={`${id}-notes`} value={draft.notes ?? ""} onChange={event => setDraft({ ...draft, notes: event.target.value })} className="min-h-32 resize-y" /></div>
@@ -65,7 +67,7 @@ function NotesEditor({ lead }: { lead: Lead }) {
     <nav aria-label="Links do lead" className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-primary">
       {site && <QuickLink href={site}><Globe className="h-4 w-4" />Site</QuickLink>}
       {instagram && <QuickLink href={instagram}><Instagram className="h-4 w-4" />Instagram</QuickLink>}
-      <QuickLink href={mapsUrl(lead.name, lead.city)}><MapPin className="h-4 w-4" />Google Maps</QuickLink>
+      <QuickLink href={mapsUrl(lead.name, lead.city, lead.google_place_id)}><MapPin className="h-4 w-4" />Google Maps</QuickLink>
     </nav>
     <section className="mt-7 border-t border-border pt-5"><h3 className="mb-4 font-semibold">Histórico</h3>
       {history.isPending ? <div aria-label="Carregando histórico" className="space-y-3"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div> : history.isError ? <div role="alert" className="space-y-3"><p className="text-sm text-destructive">Não foi possível carregar o histórico.</p><Button variant="outline" size="sm" onClick={() => void history.refetch()}>Tentar novamente</Button></div> : !history.data.length ? <p className="text-sm text-muted-foreground">Sem histórico ainda.</p> : <ol className="space-y-5 border-l border-border pl-4">{history.data.map(event => <li key={event.id} className="space-y-1"><time dateTime={event.created_at} className="text-xs text-muted-foreground">{historyDate(event.created_at)}</time><p className="break-words text-sm">{historyText(event)}</p></li>)}</ol>}

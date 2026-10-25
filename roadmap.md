@@ -1,3 +1,5 @@
+- [ ] Add business-name drawer entry points and read-only business details with safe website, Instagram and Maps links.
+- [ ] Verify detail formatting, existing drawer functionality and desktop/mobile presentation without database changes.
 - [x] Fix API polling lifecycle, five-minute timeout and same-ID manual verification.
 - [x] Add last-seven-days pending recovery and temporary debug status.
 - [x] Test timing, errors and single-call recovery; verify the authenticated dialog and real existing-run collect (5 new leads, 0 duplicates; no new search started).

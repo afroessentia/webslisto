@@ -49,8 +49,8 @@ export function instagramUrl(value: string | null) {
   const handle = value.replace(/^@/, "");
   return /^[a-z\d_.]+$/i.test(handle) ? `https://instagram.com/${handle}` : null;
 }
-export function mapsUrl(name: string, city: string | null) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + " " + (city ?? ""))}`;
+export function mapsUrl(name: string, city: string | null, placeId?: string | null) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + " " + (city ?? ""))}${placeId ? `&query_place_id=${encodeURIComponent(placeId)}` : ""}`;
 }
 export function historyText(event: Tables<"lead_events">) {
   if (event.event_type === "status_change") return `Status: ${event.from_status ? statusLabels[event.from_status] : "—"} → ${event.to_status ? statusLabels[event.to_status] : "—"}`;

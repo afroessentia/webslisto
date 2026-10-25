@@ -1,0 +1,3 @@
+- [ ] Add server-side lead filters, escaping, debounced search, and pagination.
+- [ ] Add desktop table, mobile cards, badges, tooltips, and distinct empty states.
+- [ ] Verify rules with tests and authenticated desktop/mobile checks without database changes.

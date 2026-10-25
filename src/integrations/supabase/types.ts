@@ -14,16 +14,200 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      lead_events: {
+        Row: {
+          copy: Database["public"]["Enums"]["copy_t"] | null
+          created_at: string
+          detail: string | null
+          event_type: string
+          from_status: Database["public"]["Enums"]["lead_status_t"] | null
+          id: string
+          lead_id: string
+          owner_id: string
+          to_status: Database["public"]["Enums"]["lead_status_t"] | null
+        }
+        Insert: {
+          copy?: Database["public"]["Enums"]["copy_t"] | null
+          created_at?: string
+          detail?: string | null
+          event_type: string
+          from_status?: Database["public"]["Enums"]["lead_status_t"] | null
+          id?: string
+          lead_id: string
+          owner_id?: string
+          to_status?: Database["public"]["Enums"]["lead_status_t"] | null
+        }
+        Update: {
+          copy?: Database["public"]["Enums"]["copy_t"] | null
+          created_at?: string
+          detail?: string | null
+          event_type?: string
+          from_status?: Database["public"]["Enums"]["lead_status_t"] | null
+          id?: string
+          lead_id?: string
+          owner_id?: string
+          to_status?: Database["public"]["Enums"]["lead_status_t"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          dedupe_key: string | null
+          follow_up_date: string | null
+          google_place_id: string | null
+          google_rating: number | null
+          google_reviews_count: number | null
+          id: string
+          import_batch: string | null
+          instagram_handle: string | null
+          is_mobile: boolean
+          last_contact_date: string | null
+          name: string
+          niche: Database["public"]["Enums"]["lead_niche"]
+          notes: string | null
+          original_url: string | null
+          owner_id: string
+          phone: string | null
+          selected_copy: Database["public"]["Enums"]["copy_t"] | null
+          source: string
+          status: Database["public"]["Enums"]["lead_status_t"]
+          subcategory: string | null
+          updated_at: string
+          website_status: Database["public"]["Enums"]["website_status_t"]
+          whatsapp_number: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          follow_up_date?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_reviews_count?: number | null
+          id?: string
+          import_batch?: string | null
+          instagram_handle?: string | null
+          is_mobile?: boolean
+          last_contact_date?: string | null
+          name: string
+          niche?: Database["public"]["Enums"]["lead_niche"]
+          notes?: string | null
+          original_url?: string | null
+          owner_id?: string
+          phone?: string | null
+          selected_copy?: Database["public"]["Enums"]["copy_t"] | null
+          source?: string
+          status?: Database["public"]["Enums"]["lead_status_t"]
+          subcategory?: string | null
+          updated_at?: string
+          website_status?: Database["public"]["Enums"]["website_status_t"]
+          whatsapp_number?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          follow_up_date?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_reviews_count?: number | null
+          id?: string
+          import_batch?: string | null
+          instagram_handle?: string | null
+          is_mobile?: boolean
+          last_contact_date?: string | null
+          name?: string
+          niche?: Database["public"]["Enums"]["lead_niche"]
+          notes?: string | null
+          original_url?: string | null
+          owner_id?: string
+          phone?: string | null
+          selected_copy?: Database["public"]["Enums"]["copy_t"] | null
+          source?: string
+          status?: Database["public"]["Enums"]["lead_status_t"]
+          subcategory?: string | null
+          updated_at?: string
+          website_status?: Database["public"]["Enums"]["website_status_t"]
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
+      message_templates: {
+        Row: {
+          body: string
+          id: string
+          key: Database["public"]["Enums"]["copy_t"]
+          owner_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          id?: string
+          key: Database["public"]["Enums"]["copy_t"]
+          owner_id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          id?: string
+          key?: Database["public"]["Enums"]["copy_t"]
+          owner_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      lead_metrics: {
+        Row: {
+          demos_enviadas: number | null
+          ganados: number | null
+          leads_sin_web: number | null
+          total_leads: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      classify_website: {
+        Args: { url: string }
+        Returns: Database["public"]["Enums"]["website_status_t"]
+      }
+      ensure_default_templates: { Args: never; Returns: undefined }
+      normalize_es_phone: { Args: { raw: string }; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      copy_t: "demo_gratis" | "oferta_directa_79"
+      lead_niche: "reformas" | "belleza_estetica" | "otros"
+      lead_status_t:
+        | "nuevo"
+        | "calificado"
+        | "demo_enviada"
+        | "en_conversacion"
+        | "ganado"
+        | "descartado"
+        | "no_contactar"
+      website_status_t:
+        | "sin_web"
+        | "solo_redes_sociales"
+        | "web_antigua_wordpress"
+        | "web_operativa"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +334,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      copy_t: ["demo_gratis", "oferta_directa_79"],
+      lead_niche: ["reformas", "belleza_estetica", "otros"],
+      lead_status_t: [
+        "nuevo",
+        "calificado",
+        "demo_enviada",
+        "en_conversacion",
+        "ganado",
+        "descartado",
+        "no_contactar",
+      ],
+      website_status_t: [
+        "sin_web",
+        "solo_redes_sociales",
+        "web_antigua_wordpress",
+        "web_operativa",
+      ],
+    },
   },
 } as const

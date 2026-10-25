@@ -4,3 +4,6 @@
 - [x] Add WhatsApp templates, editable messages, open-first saving, and click events.
 - [x] Add optimistic status selectors, confirmations, and rollback.
 - [x] Test action rules and verify desktop/mobile flows without schema changes. Real account remains empty; write/readback flows verified with browser-only fixtures, not live lead writes.
+- [ ] Add notes drawer with changed-field saving, follow-up date and editable website/Instagram fields.
+- [ ] Add safe quick links and on-open history, newest first with a 50-event limit.
+- [ ] Run rule tests and verify drawer saving and mobile layout without database changes.

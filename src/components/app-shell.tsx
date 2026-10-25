@@ -1,19 +1,17 @@
 import type { ReactNode } from "react";
-import { Link, useNavigate, useRouteContext } from "@tanstack/react-router";
+import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, LogOut } from "lucide-react";
+import { Check, ChevronDown, LogOut, Plus, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export function Logo() {
   return (
     <div className="flex items-center gap-2">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-extrabold text-primary-foreground">
-        W
-      </div>
-      <span className="text-base font-bold tracking-tight">
-        WebListo <span className="text-muted-foreground font-medium">CRM</span>
-      </span>
+      <span className="text-xl font-extrabold text-foreground">WebListo</span>
+      <Check aria-hidden="true" className="h-4 w-4 text-primary" strokeWidth={3} />
     </div>
   );
 }
@@ -33,25 +31,31 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-6">
-            <Logo />
-            <nav className="hidden sm:flex">
-              <Link
-                to="/"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground [&.active]:bg-secondary [&.active]:text-foreground"
-              >
-                <LayoutDashboard className="h-4 w-4" /> Painel
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden max-w-[200px] truncate text-sm text-muted-foreground md:inline">
-              {user.email}
-            </span>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut /> <span className="hidden sm:inline">Sair</span>
-            </Button>
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto] items-center gap-3 px-4 py-4 sm:flex sm:justify-between sm:px-6">
+          <Logo />
+          <div className="contents sm:flex sm:items-center sm:gap-3">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="order-3 col-span-2 w-full sm:order-none sm:w-auto">
+                  <Plus /> Importar / Sincronizar Leads
+                </Button>
+              </DialogTrigger>
+              <DialogContent aria-describedby={undefined} className="min-h-48 max-w-[calc(100%-2rem)] rounded-xl border-border bg-card shadow-none sm:max-w-lg">
+                <DialogHeader><DialogTitle className="pr-6 leading-snug">Importar / Sincronizar Leads</DialogTitle></DialogHeader>
+              </DialogContent>
+            </Dialog>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" aria-label="Menu do usuário" title="Menu do usuário" className="justify-self-end">
+                  <UserRound /> <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="max-w-[calc(100vw-2rem)]">
+                <DropdownMenuLabel className="break-all text-xs font-normal text-muted-foreground">{user.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleSignOut}><LogOut /> Sair</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

@@ -42,7 +42,7 @@ export function templatesOptions(userId: string) {
       const load = () => supabase.from("message_templates").select("*").in("key", ["demo_gratis", "oferta_directa_79"]);
       let result = await load();
       if (result.error) throw result.error;
-      if (!result.data?.length) {
+      if ((result.data?.length ?? 0) < 2) {
         await supabase.rpc("ensure_default_templates");
         result = await load();
         if (result.error) throw result.error;

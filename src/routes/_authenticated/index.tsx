@@ -8,6 +8,8 @@ export const Route = createFileRoute("/_authenticated/")({
       { name: "description", content: "Painel de leads de negócios locais na Espanha." },
       { property: "og:title", content: "Painel — WebListo CRM" },
       { property: "og:description", content: "Painel de leads de negócios locais na Espanha." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Dashboard,

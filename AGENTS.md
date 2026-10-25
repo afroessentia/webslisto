@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - All app pages live under src/routes/_authenticated/ (client-only gate redirecting to /login); /login is the only public page. Why: single-user internal tool, everything is private.
+- Initialize default message templates only after successful password sign-in, never on session restoration or token refresh. Why: the existing idempotent RPC should run once per login session without blocking access on failure.

@@ -15,7 +15,7 @@ describe("CSV import rules", () => {
     const result = parseCsvText('\uFEFF name ; city ; rating\n Salón ; Reus ;4,5\n ; ;\n');
     expect(result.headers).toEqual(["name", "city", "rating"]);
     expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]?.rating).toBe("4,5");
+    expect(result.rows[0]?.['rating']).toBe("4,5");
   });
   it("parses commas and flags corrupted accents", () => {
     expect(parseCsvText('name,city\nGarcÃ­a,Reus').encodingHint).toBe(true);

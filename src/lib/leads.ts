@@ -19,9 +19,9 @@ export const leadSearchSchema = z.object({
 });
 export const websiteTypes = ["sin_web", "solo_redes_sociales", "web_antigua_wordpress", "web_operativa"] as const;
 export function normalizeLeadFilters(filters: z.infer<typeof leadSearchSchema>) {
-  const niche = filters.niche === "reformas" || filters.niche === "belleza_estetica" || filters.niche === "otros" ? filters.niche : "all";
-  const status = filters.status === "nuevo" || filters.status === "calificado" || filters.status === "demo_enviada" || filters.status === "en_conversacion" || filters.status === "ganado" || filters.status === "descartado" || filters.status === "no_contactar" ? filters.status : "all";
-  const websiteType = websiteTypes.find(type => type === filters.websiteType) ?? "all";
+  const niche: Lead["niche"] | "all" = filters.niche === "reformas" || filters.niche === "belleza_estetica" || filters.niche === "otros" ? filters.niche : "all";
+  const status: Lead["status"] | "all" = filters.status === "nuevo" || filters.status === "calificado" || filters.status === "demo_enviada" || filters.status === "en_conversacion" || filters.status === "ganado" || filters.status === "descartado" || filters.status === "no_contactar" ? filters.status : "all";
+  const websiteType: Lead["website_status"] | "all" = websiteTypes.find(type => type === filters.websiteType) ?? "all";
   return { ...filters, niche, status, websiteType, page: Number.isFinite(filters.page) ? Math.max(1, Math.floor(filters.page)) : 1 };
 }
 export type LeadFilters = ReturnType<typeof normalizeLeadFilters>;

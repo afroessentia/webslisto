@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { WhatsappAction } from "@/components/whatsapp-action";
 import { LeadWebsiteBadge } from "@/components/lead-website";
-import { useImportDialog } from "@/components/import-dialog";
+import { useImportDialog } from "@/components/import-dialog-context";
 import { invalidateLeadActions, saveLeadStatus } from "@/lib/lead-actions";
 import { mapsUrl } from "@/lib/lead-notes";
 import { businessRating } from "@/lib/lead-details";

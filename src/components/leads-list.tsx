@@ -6,7 +6,7 @@ import { LeadWebsiteBadge } from "@/components/lead-website";
 import { LeadStatusSelector } from "@/components/lead-status-selector";
 import { WhatsappAction } from "@/components/whatsapp-action";
 import { LeadNotesDrawer } from "@/components/lead-notes-drawer";
-import { useImportDialog } from "@/components/import-dialog";
+import { useImportDialog } from "@/components/import-dialog-context";
 import { PAGE_SIZE, formatContactDate, type Lead } from "@/lib/leads";
 
 function Phone({ lead }: { lead: Lead }) {

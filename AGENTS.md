@@ -19,3 +19,4 @@
 - WhatsApp opens synchronously once per composer before saving; writes re-read status and use a status-match guard. Why: popup blockers and stale list data must not cause duplicate opens or overwrite newer funnel status.
 - Optimistic status updates affect all cached lead list variants and roll back only the failed lead's attempted status. Why: failures must not revert unrelated concurrent lead changes.
 - Notes drawers mount their editor and user-scoped history query only while open; edits use narrow patches and URL changes omit manual website status. Why: avoid closed-drawer reads and let the existing classification trigger run without stale status overrides.
+- The template editor and WhatsApp composer share templatesOptions; editor drafts and saved baselines stay separate per key, and saves invalidate the owner-scoped templates cache. Why: refresh composer text without losing unsaved edits in the other tab.

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouteContext } from "@tanstack/react-router";
 import { CheckCircle2, FileUp, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { autoMapCsv, cleanCsvRows, csvAliases, csvFileError, detectedPhone, importCsvLeads, invalidateCsvImport, parseCsvText, type CsvField, type CsvMapping, type CsvRow, type ImportNiche } from "@/lib/csv-import";
+import { autoMapCsv, cleanCsvRows, csvAliases, csvFileError, csvPhoneNumbers, detectedPhone, existingCsvPhones, excludeCsvPhoneDuplicates, importCsvLeads, invalidateCsvImport, parseCsvText, type CsvField, type CsvMapping, type CsvRow, type ImportNiche } from "@/lib/csv-import";
 
 const fieldLabels: Record<CsvField, string> = { name: "Nome do negócio", subcategory: "Subcategoria", city: "Cidade", address: "Endereço", phone: "Telefone", original_url: "Site", google_rating: "Avaliação Google", google_reviews_count: "Número de avaliações", google_place_id: "ID do Google Maps" };
 export function CsvImportPanel({ onClose, onBusy }: { onClose: () => void; onBusy: (busy: boolean) => void }) {
   const client = useQueryClient();
+  const { user } = useRouteContext({ from: "/_authenticated" });
   const input = useRef<HTMLInputElement>(null);
   const readVersion = useRef(0);
   const [file, setFile] = useState<File | null>(null);
@@ -29,6 +31,14 @@ export function CsvImportPanel({ onClose, onBusy }: { onClose: () => void; onBus
   const [dragging, setDragging] = useState(false);
   const [progress, setProgress] = useState({ batch: 0, total: 0 });
   const cleaned = useMemo(() => cleanCsvRows(rows, mapping, { city, subcategory }), [rows, mapping, city, subcategory]);
+  const numbers = useMemo(() => csvPhoneNumbers(cleaned.rows), [cleaned.rows]);
+  const phoneCheck = useQuery({
+    queryKey: ["leads", user.id, "csv-existing-phones", numbers],
+    queryFn: () => existingCsvPhones(user.id, numbers),
+    enabled: cleaned.rows.length > 0,
+    retry: false,
+  });
+  const phoneDuplicates = phoneCheck.data ? excludeCsvPhoneDuplicates(cleaned.rows, phoneCheck.data).phoneDuplicates : 0;
   const mutation = useMutation({
     mutationFn: () => importCsvLeads(cleaned.rows, niche || undefined, (batch, total) => setProgress({ batch, total })),
     retry: false,
@@ -65,7 +75,8 @@ export function CsvImportPanel({ onClose, onBusy }: { onClose: () => void; onBus
       <div className="grid gap-4 sm:grid-cols-3"><div className="space-y-2"><Label htmlFor="csv-niche">Nicho *</Label><Select value={niche ?? ""} disabled={disabled} onValueChange={value => { if (value === "reformas" || value === "belleza_estetica" || value === "otros") setNiche(value); mutation.reset(); }}><SelectTrigger id="csv-niche"><SelectValue placeholder="Selecione o nicho" /></SelectTrigger><SelectContent><SelectItem value="reformas">Reformas</SelectItem><SelectItem value="belleza_estetica">Estética e Beleza</SelectItem><SelectItem value="otros">Outros</SelectItem></SelectContent></Select></div><div className="space-y-2"><Label htmlFor="csv-subcategory">Subcategoria padrão</Label><Input id="csv-subcategory" value={subcategory} onChange={event => { setSubcategory(event.target.value); mutation.reset(); }} /></div><div className="space-y-2"><Label htmlFor="csv-city">Cidade padrão</Label><Input id="csv-city" value={city} onChange={event => { setCity(event.target.value); mutation.reset(); }} /></div></div>
     </fieldset>
     {rows.length > 0 && <section className="space-y-4 border-t border-border pt-5"><h3 className="font-semibold">Prévia</h3><dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">{[["Linhas válidas", cleaned.rows.length], ["Com celular", cleaned.mobile], ["Sem site", cleaned.noSite], ["Linhas ignoradas", cleaned.ignored]].map(([label, count]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 text-lg font-semibold">{Number(count).toLocaleString("pt-BR")}</dd></div>)}</dl><Table><TableHeader><TableRow><TableHead>Negócio</TableHead><TableHead>Cidade</TableHead><TableHead>Telefone detectado</TableHead><TableHead>Web</TableHead></TableRow></TableHeader><TableBody>{cleaned.rows.slice(0, 10).map((row, index) => { const phone = detectedPhone(row.phone); return <TableRow key={index}><TableCell className="max-w-48 break-words font-medium">{row.name}</TableCell><TableCell>{row.city || "—"}</TableCell><TableCell className="min-w-40">{phone ? <><span>{phone.number}</span><span className="ml-2 text-xs text-muted-foreground">{phone.mobile ? "Celular" : "Fixo"}</span></> : <span className="text-muted-foreground">Sem telefone válido</span>}</TableCell><TableCell className="max-w-48 break-all text-xs">{row.original_url || "Sem site"}</TableCell></TableRow>; })}</TableBody></Table></section>}
-    {disabled && <div role="status" className="space-y-2"><p className="text-sm">Lote {progress.batch} de {progress.total}</p><Progress value={progress.total ? (progress.batch - 1) / progress.total * 100 : 0} /></div>}
-    {mutation.isSuccess ? <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><p className="flex items-center gap-2 text-sm"><CheckCircle2 className="h-4 w-4 text-primary" />{mutation.data.inserted} novos, {mutation.data.duplicates} duplicados ignorados</p><Button onClick={onClose}>Ver leads</Button></div> : <Button className="w-full sm:w-auto" disabled={!rows.length || !mapping.name || !niche || !cleaned.rows.length || parsing || disabled} onClick={() => mutation.mutate()}>{disabled ? <Loader2 className="animate-spin" /> : <Upload />}Importar {cleaned.rows.length} leads</Button>}
+    {cleaned.rows.length > 0 && <div className="text-sm text-muted-foreground" aria-live="polite">{phoneCheck.isFetching ? <p>Verificando telefones já cadastrados…</p> : phoneCheck.isError ? <p role="alert" className="text-destructive">{phoneCheck.error.message}</p> : <p>{phoneDuplicates} já existem na base (mesmo telefone)</p>}</div>}
+    {disabled && <div role="status" className="space-y-2"><p className="text-sm">{progress.total ? `Lote ${progress.batch} de ${progress.total}` : "Verificando telefones já cadastrados…"}</p><Progress value={progress.total ? (progress.batch - 1) / progress.total * 100 : 0} /></div>}
+    {mutation.isSuccess ? <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><p className="flex items-center gap-2 text-sm"><CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />{mutation.data.inserted} novos, {mutation.data.duplicates} duplicados por ID, {mutation.data.phoneDuplicates} duplicados por telefone</p><Button onClick={onClose}>Ver leads</Button></div> : <Button className="w-full sm:w-auto" disabled={!rows.length || !mapping.name || !niche || !cleaned.rows.length || parsing || disabled || phoneCheck.isPending || phoneCheck.isFetching || phoneCheck.isError} onClick={() => { setProgress({ batch: 0, total: 0 }); mutation.mutate(); }}>{disabled ? <Loader2 className="animate-spin" /> : <Upload />}Importar {cleaned.rows.length} leads</Button>}
   </div>;
 }

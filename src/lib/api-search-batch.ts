@@ -14,7 +14,7 @@ export const termSuggestions = {
 export const citySuggestions = ["Reus", "Tarragona", "Salou", "Cambrils", "Vila-seca", "Torredembarra", "Valls", "Constantí"];
 export type ImportedSearch = Pick<Tables<"search_runs">, "niche" | "subcategory" | "city" | "created_at">;
 export type Combination = { key: string; niche: Tables<"search_runs">["niche"]; subcategory: string; city: string; daysAgo: number | null };
-export type BatchRow = Combination & { state: "waiting" | "running" | "done" | "failed" | "pending"; searchId?: string; result?: SyncResult; error?: string };
+export type BatchRow = Combination & { state: "waiting" | "running" | "done" | "failed" | "pending"; searchId?: string; result?: SyncResult | undefined; error?: string | undefined };
 
 export function addChoice(values: string[], value: string) {
   const trimmed = value.trim();

@@ -12,6 +12,7 @@ export const demoLinks: Partial<Record<Lead["niche"], string>> = {
 };
 
 export function parseGoal(value: string | null | undefined) {
+  if (value == null || value.trim() === "") return DEFAULT_GOAL;
   const n = Number(value);
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : DEFAULT_GOAL;
 }

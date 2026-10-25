@@ -20,7 +20,7 @@ export function WhatsappAction({ lead, defaultCopy }: { lead: Lead; defaultCopy?
   </>;
 }
 
-function MessageComposer({ lead, defaultCopy, onClose }: { lead: Lead; defaultCopy?: CopyKey; onClose: () => void }) {
+function MessageComposer({ lead, defaultCopy, onClose }: { lead: Lead; defaultCopy?: CopyKey | undefined; onClose: () => void }) {
   const client = useQueryClient();
   const query = useQuery(templatesOptions(lead.owner_id));
   const [copy, setCopy] = useState<CopyKey | null>(null);

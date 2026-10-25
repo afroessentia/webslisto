@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ from: vi.fn(), auth: { getSession: vi.fn() } }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mocks }));
-import { autoMapCsv, cleanCsvRows, cleanRating, cleanReviews, cleanWebsite, csvFileError, detectedPhone, importBatchLabel, importCsvLeads, invalidateCsvImport, MAX_CSV_BYTES, parseCsvText, type CleanLead } from "@/lib/csv-import";
+import { autoMapCsv, cleanCsvRows, cleanRating, cleanReviews, cleanWebsite, csvFileError, csvPhoneNumbers, detectedPhone, existingCsvPhones, excludeCsvPhoneDuplicates, importBatchLabel, importCsvLeads, invalidateCsvImport, MAX_CSV_BYTES, parseCsvText, type CleanLead } from "@/lib/csv-import";
 describe("CSV import rules", () => {
   beforeEach(() => { vi.resetAllMocks(); mocks.auth.getSession.mockResolvedValue({ data: { session: { user: { id: "owner" } } }, error: null }); });
   it("allows CSV up to 5 MB, rejects other extensions and larger files", () => {
@@ -68,7 +68,7 @@ describe("CSV import rules", () => {
     const upsert = vi.fn().mockReturnValue({ select }); mocks.from.mockReturnValue({ upsert });
     const row = { name: "Lead", whatsapp_number: "bad", website_status: "bad", dedupe_key: "bad", owner_id: "bad" } as CleanLead;
     const progress = vi.fn();
-    expect(await importCsvLeads(Array(201).fill(row), "reformas", progress)).toEqual({ inserted: 191, duplicates: 10 });
+    expect(await importCsvLeads(Array(201).fill(row), "reformas", progress)).toEqual({ inserted: 191, duplicates: 10, phoneDuplicates: 0 });
     expect(upsert.mock.calls[0]?.[0]).toHaveLength(200); expect(upsert.mock.calls[1]?.[0]).toHaveLength(1);
     const first = upsert.mock.calls[0]?.[0][0];
     expect(first).toMatchObject({ owner_id: "owner", niche: "reformas", source: "csv" });
@@ -93,5 +93,48 @@ describe("CSV import rules", () => {
     const client = new QueryClient(); const spy = vi.spyOn(client, "invalidateQueries").mockResolvedValue();
     await invalidateCsvImport(client);
     expect(spy.mock.calls.map(call => call[0]?.queryKey)).toEqual([["leads"], ["lead_metrics"], ["lead-cities"]]);
+  });
+  function phoneLookup(data: { whatsapp_number: string }[] = [], error: unknown = null) {
+    const range = vi.fn().mockResolvedValue({ data, error });
+    const order = vi.fn().mockReturnValue({ range });
+    const inNumbers = vi.fn().mockReturnValue({ order });
+    const eq = vi.fn().mockReturnValue({ in: inNumbers });
+    const select = vi.fn().mockReturnValue({ eq });
+    return { select, eq, inNumbers, range };
+  }
+  it("normalizes preview phones and checks 201 unique numbers in chunks of 100 with owner-only scope", async () => {
+    const lookup = phoneLookup([{ whatsapp_number: "+34612345678" }]);
+    mocks.from.mockReturnValue(lookup);
+    const numbers = csvPhoneNumbers(Array.from({ length: 201 }, (_, i) => ({ name: "N", phone: String(612345678 + i) })));
+    expect(numbers[0]).toBe("+34612345678");
+    expect(await existingCsvPhones("owner", numbers)).toEqual(new Set(["+34612345678"]));
+    expect(lookup.inNumbers.mock.calls.map(call => call[1].length)).toEqual([100, 100, 1]);
+    expect(lookup.eq.mock.calls).toEqual(Array(3).fill(["owner_id", "owner"]));
+    expect(lookup.select).toHaveBeenCalledWith("whatsapp_number");
+  });
+  it("excludes every matching row including fixed phones, keeps invalid phones and CSV-only repeats", () => {
+    const rows = ["0034 612 345 678", "34 612345678", "912345678", "invalid", "712345678", "712345678"].map(phone => ({ name: "N", phone }));
+    expect(excludeCsvPhoneDuplicates(rows, new Set(["+34612345678", "+34912345678"]))).toEqual({ rows: rows.slice(3), phoneDuplicates: 3 });
+    expect(csvPhoneNumbers(rows)).toEqual(["+34612345678", "+34712345678", "+34912345678"]);
+  });
+  it("rechecks phones before upsert, excludes discarded matches and separates ID and phone totals", async () => {
+    // Only whatsapp_number is returned: status must not filter discarded leads out.
+    const lookup = phoneLookup([{ whatsapp_number: "+34612345678" }]);
+    const select = vi.fn().mockResolvedValue({ data: [{ id: "new" }], error: null });
+    const upsert = vi.fn().mockReturnValue({ select });
+    mocks.from.mockReturnValueOnce(lookup).mockReturnValue({ upsert });
+    const rows = ["0034 612345678", "712345678", "invalid"].map((phone, i) => ({ name: String(i), phone }));
+    expect(await importCsvLeads(rows, "otros", vi.fn())).toEqual({ inserted: 1, duplicates: 1, phoneDuplicates: 1 });
+    expect(upsert.mock.calls[0]?.[0].map((row: CleanLead) => row.name)).toEqual(["1", "2"]);
+    expect(upsert.mock.calls[0]?.[1]).toEqual({ onConflict: "owner_id,dedupe_key", ignoreDuplicates: true });
+  });
+  it("does not upsert when all phones already exist or lookup fails", async () => {
+    const lookup = phoneLookup([{ whatsapp_number: "+34612345678" }]);
+    mocks.from.mockReturnValue(lookup);
+    expect(await importCsvLeads([{ name: "N", phone: "612345678" }], "otros", vi.fn())).toEqual({ inserted: 0, duplicates: 0, phoneDuplicates: 1 });
+    expect(mocks.from).toHaveBeenCalledTimes(1);
+    mocks.from.mockReturnValue(phoneLookup([], new Error("Lookup failed")));
+    await expect(importCsvLeads([{ name: "N", phone: "612345678" }], "otros", vi.fn())).rejects.toThrow("Lookup failed");
+    expect(mocks.from).toHaveBeenCalledTimes(2);
   });
 });

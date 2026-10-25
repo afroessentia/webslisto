@@ -75,6 +75,26 @@ export function detectedPhone(value: string | null | undefined) {
   else if (digits.length === 11 && digits.startsWith("34")) digits = digits.slice(2);
   return digits.length === 9 ? { number: `+34${digits}`, mobile: /^[67]/.test(digits) } : null;
 }
+export function csvPhoneNumbers(rows: CleanLead[]) {
+  return [...new Set(rows.flatMap(row => { const phone = detectedPhone(row.phone); return phone ? [phone.number] : []; }))].sort();
+}
+export async function existingCsvPhones(ownerId: string, numbers: string[]) {
+  const existing = new Set<string>();
+  for (let offset = 0; offset < numbers.length; offset += 100) {
+    const chunk = numbers.slice(offset, offset + 100);
+    for (let start = 0; ; start += 1000) {
+      const { data, error } = await supabase.from("leads").select("whatsapp_number").eq("owner_id", ownerId).in("whatsapp_number", chunk).order("id").range(start, start + 999);
+      if (error) throw error;
+      for (const row of data ?? []) if (row.whatsapp_number) existing.add(row.whatsapp_number);
+      if (!data || data.length < 1000) break;
+    }
+  }
+  return existing;
+}
+export function excludeCsvPhoneDuplicates(rows: CleanLead[], existing: Set<string>) {
+  const remaining = rows.filter(row => { const phone = detectedPhone(row.phone); return !phone || !existing.has(phone.number); });
+  return { rows: remaining, phoneDuplicates: rows.length - remaining.length };
+}
 export function cleanCsvRows(rows: CsvRow[], mapping: CsvMapping, defaults: { city: string; subcategory: string }) {
   const cleaned: CleanLead[] = [];
   for (const row of rows) {
@@ -100,21 +120,23 @@ export async function importCsvLeads(rows: CleanLead[], niche: ImportNiche | und
   if (error) throw error;
   if (!data.session?.user.id) throw new Error("Sua sessão expirou. Entre novamente para importar.");
   const owner_id = data.session.user.id;
+  const existing = await existingCsvPhones(owner_id, csvPhoneNumbers(rows));
+  const { rows: remaining, phoneDuplicates } = excludeCsvPhoneDuplicates(rows, existing);
   const import_batch = importBatchLabel();
-  const total = Math.ceil(rows.length / IMPORT_BATCH_SIZE);
+  const total = Math.ceil(remaining.length / IMPORT_BATCH_SIZE);
   let inserted = 0;
-  for (let offset = 0; offset < rows.length; offset += IMPORT_BATCH_SIZE) {
+  for (let offset = 0; offset < remaining.length; offset += IMPORT_BATCH_SIZE) {
     const batchNumber = offset / IMPORT_BATCH_SIZE + 1;
     onProgress(batchNumber, total);
     // Whitelist cleaned fields instead of spreading untrusted CSV input.
-    const batch = rows.slice(offset, offset + IMPORT_BATCH_SIZE).map(row => ({ name: row.name, subcategory: row.subcategory ?? null, city: row.city ?? null, address: row.address ?? null, phone: row.phone ?? null, original_url: row.original_url ?? null, google_rating: row.google_rating ?? null, google_reviews_count: row.google_reviews_count ?? null, google_place_id: row.google_place_id ?? null, owner_id, niche, source: "csv", import_batch }));
+    const batch = remaining.slice(offset, offset + IMPORT_BATCH_SIZE).map(row => ({ name: row.name, subcategory: row.subcategory ?? null, city: row.city ?? null, address: row.address ?? null, phone: row.phone ?? null, original_url: row.original_url ?? null, google_rating: row.google_rating ?? null, google_reviews_count: row.google_reviews_count ?? null, google_place_id: row.google_place_id ?? null, owner_id, niche, source: "csv", import_batch }));
     try {
       const result = await supabase.from("leads").upsert(batch, { onConflict: "owner_id,dedupe_key", ignoreDuplicates: true }).select("id");
       if (result.error) throw result.error;
       inserted += result.data?.length ?? 0;
     } catch (error) { throw new CsvBatchError(batchNumber, inserted, error instanceof Error ? error.message : typeof error === "object" && error !== null && "message" in error ? String(error.message) : "Erro de conexão"); }
   }
-  return { inserted, duplicates: rows.length - inserted };
+  return { inserted, duplicates: remaining.length - inserted, phoneDuplicates };
 }
 export async function invalidateCsvImport(client: QueryClient) {
   await Promise.all([client.invalidateQueries({ queryKey: ["leads"] }), client.invalidateQueries({ queryKey: ["lead_metrics"] }), client.invalidateQueries({ queryKey: ["lead-cities"] })]);

@@ -22,7 +22,7 @@ it("keeps shared import actions usable when the authenticated page changes", () 
   view.rerender(tree("Fila"));
   fireEvent.click(screen.getByRole("button", { name: "Fila" }));
   expect(screen.getAllByRole("dialog")).toHaveLength(1);
-  fireEvent.click(screen.getByRole("button", { name: "Close" }));
+  fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
   fireEvent.click(screen.getByRole("button", { name: "Navbar" }));
   expect(screen.getAllByRole("dialog")).toHaveLength(1);
 });

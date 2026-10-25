@@ -13,12 +13,12 @@ describe("WhatsApp rules", () => {
   it("uses local date fields rather than UTC serialization", () => {
     const date = new Date(2026, 9, 25, 23, 59);
     expect(localDate(date)).toBe("2026-10-25");
-    expect(sendUpdate("nuevo", "demo_gratis", date)).toEqual({ selected_copy: "demo_gratis", last_contact_date: "2026-10-25", status: "demo_enviada" });
+    expect(sendUpdate("nuevo", "demo_gratis", date)).toEqual({ selected_copy: "demo_gratis", last_contact_date: "2026-10-25", status: "calificado" });
   });
-  it.each(["nuevo", "calificado"] as const)("advances %s for demo only", status => {
-    expect(sendUpdate(status, "demo_gratis").status).toBe("demo_enviada");
+  it("advances nuevo to calificado for demo only", () => {
+    expect(sendUpdate("nuevo", "demo_gratis").status).toBe("calificado");
   });
-  it.each(["demo_enviada", "en_conversacion", "ganado", "descartado", "no_contactar"] as const)("never downgrades %s for demo", status => {
+  it.each(["calificado", "demo_enviada", "en_conversacion", "ganado", "descartado", "no_contactar"] as const)("never downgrades %s for demo", status => {
     expect(sendUpdate(status, "demo_gratis")).not.toHaveProperty("status");
   });
   it.each(["nuevo", "calificado", "demo_enviada", "en_conversacion", "ganado", "descartado", "no_contactar"] as const)("never changes %s for direct offer", status => {

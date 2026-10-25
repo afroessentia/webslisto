@@ -10,15 +10,15 @@ export const templateDefaults: Record<TemplateKey, TemplateDraft> = {
     title: "Demo gratuita",
     body: `Hola, ¿qué tal? Soy Carine, de WebListo. He visto {nombre_negocio} en Google Maps ({ciudad}) y he notado que todavía no tenéis una web propia.
 
-Os he preparado una demo gratuita de cómo podría quedar vuestra web, sin ningún compromiso. ¿Te la envío por aquí?
+Tengo una demo gratuita de cómo podría quedar una web para un negocio como el vuestro, sin ningún compromiso. ¿Te la envío por aquí?
 
 Si prefieres que no te escriba más, dímelo y no vuelvo a molestar. ¡Gracias!`,
   },
   oferta_directa_79: {
-    title: "Oferta direta 79 €",
-    body: `Hola, ¿qué tal? Soy Carine, de WebListo. He visto {nombre_negocio} en Google Maps ({ciudad}) y quería ofreceros algo concreto: una web profesional para vuestro negocio, lista en 48 horas, por 79 €. Incluye botón de WhatsApp, vuestras fotos y vuestra ubicación en Google Maps.
+    title: "Proposta com preços",
+    body: `Gracias por tu interés. Para que te hagas una idea, tenemos opciones desde 79 € (precio de lanzamiento, hasta fin de año), según lo que necesite {nombre_negocio}.
 
-¿Os interesa que os cuente cómo funciona?
+¿Te cuento cuál encajaría mejor en vuestro caso?
 
 Si prefieres que no te escriba más, dímelo y no vuelvo a molestar. ¡Gracias!`,
   },

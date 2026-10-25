@@ -29,7 +29,7 @@ async function start() {
   fireEvent.change(screen.getByLabelText("Nicho"), { target: { value: "reformas" } });
   fireEvent.change(screen.getByLabelText("Subcategoria (termo de busca) *"), { target: { value: "fontanero" } });
   fireEvent.change(screen.getByLabelText("Cidade *"), { target: { value: "Tarragona" } });
-  fireEvent.click(screen.getByRole("button", { name: "Buscar", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: /^Buscar$/ }));
   await flush();
 }
 beforeEach(() => {
@@ -44,12 +44,12 @@ it("polls under StrictMode and preserves the ID for one manual collect after tim
   await mount(); await start();
   expect(mocks.start).toHaveBeenCalledTimes(1);
   expect(screen.queryByText("A busca demorou demais. Tente novamente mais tarde.")).toBeNull();
-  expect(screen.getByRole("button", { name: "Buscar", exact: true })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /^Buscar$/ })).toBeDisabled();
   await act(async () => { await vi.advanceTimersByTimeAsync(299999); });
   expect(screen.queryByText("A busca demorou demais. Tente novamente mais tarde.")).toBeNull();
   await act(async () => { await vi.advanceTimersByTimeAsync(1); });
   expect(screen.getByRole("alert")).toHaveTextContent("A busca demorou demais");
-  expect(screen.getByRole("button", { name: "Buscar", exact: true })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /^Buscar$/ })).toBeDisabled();
   const count = mocks.collect.mock.calls.length;
   await act(async () => { await vi.advanceTimersByTimeAsync(300000); });
   expect(mocks.collect).toHaveBeenCalledTimes(count);
@@ -72,7 +72,7 @@ it("verifies recovery rows one at a time and refreshes leads and metrics without
   let resolve: (value: unknown) => void = () => {};
   mocks.collect.mockImplementation(() => new Promise(r => { resolve = r; }));
   const invalidate = await mount();
-  const button = screen.getByRole("button", { name: "Verificar", exact: true });
+  const button = screen.getByRole("button", { name: /^Verificar$/ });
   fireEvent.click(button); fireEvent.click(button); await flush();
   expect(mocks.collect).toHaveBeenCalledExactlyOnceWith({ data: { searchId: "old-id" } });
   expect(button).toBeDisabled();

@@ -1,4 +1,4 @@
-- [ ] Add owner-scoped CSV phone checks in chunks of 100, preview count and separate final duplicate totals; test and verify without database changes.
+- [x] Add owner-scoped CSV phone checks in chunks of 100, preview count and separate final duplicate totals. 19 focused tests pass; authenticated import with an existing phone shows 1 preview duplicate and 0 new / 0 ID duplicates / 1 phone duplicate, with zero database writes and no runtime errors. Build OK; no database changes.
 - [x] Add required niche, multi-term/city selection, recent-search exclusion and batch summary.
 - [x] Run serialized searches using existing polling, stop/pending recovery and totals without backend/database changes.
 - [x] Test batch rules and verify the dialog without starting paid searches. 19 focused tests pass for sequential execution, timeout/manual recovery, stop-after-current, repeat exclusion and totals; real authenticated dialog shows the three existing pending searches and validates selection/limit on desktop/mobile. Build OK. No paid batch was started.

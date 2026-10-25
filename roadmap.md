@@ -7,6 +7,6 @@
 - [x] Add notes drawer with changed-field saving, follow-up date and editable website/Instagram fields.
 - [x] Add safe quick links and on-open history, newest first with a 50-event limit.
 - [x] Run rule tests and verify drawer saving and mobile layout without database changes. 62 tests pass; authenticated account has no leads, so populated drawer save/readback verified with browser-only fixtures; no live writes made.
-- [ ] Add navbar message-template editor with independent drafts, tags, preview and close/restore confirmations.
-- [ ] Share template loading/recovery, validate and save current title/body only without schema changes.
-- [ ] Test template rules and verify editing, saving and WhatsApp refresh in desktop/mobile views.
+- [x] Add navbar message-template editor with independent drafts, tags, preview and close/restore confirmations.
+- [x] Share template loading/recovery, validate and save current title/body only without schema changes.
+- [x] Test template rules and verify editing, saving and WhatsApp refresh in desktop/mobile views. 36 targeted tests pass; authenticated live save/reopen checked with existing text unchanged, destructive edits and composer refresh checked through browser-only fixtures.

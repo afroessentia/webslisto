@@ -9,7 +9,7 @@ export const copyLabels: Record<CopyKey, string> = { demo_gratis: "Demo gratuita
 
 export function renderMessage(body: string, lead: Pick<Lead, "name" | "city" | "subcategory">) {
   const values: Record<string, string> = { nombre_negocio: lead.name ?? "", ciudad: lead.city ?? "", subcategoria: lead.subcategory ?? "" };
-  return body.replace(/\{(nombre_negocio|ciudad|subcategoria)\}/g, (_, key: string) => values[key])
+  return body.replace(/\{(nombre_negocio|ciudad|subcategoria)\}/g, (_, key: string) => values[key] ?? "")
     .replace(/\\n/g, "\n").replace(/ {2,}/g, " ");
 }
 

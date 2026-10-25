@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedAcompanharRouteImport } from './routes/_authenticated/acompanhar'
 import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/fila'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -28,6 +29,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAcompanharRoute = AuthenticatedAcompanharRouteImport.update({
+  id: '/acompanhar',
+  path: '/acompanhar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFilaRoute = AuthenticatedFilaRouteImport.update({
   id: '/fila',
   path: '/fila',
@@ -37,10 +43,12 @@ const AuthenticatedFilaRoute = AuthenticatedFilaRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
+  '/acompanhar': typeof AuthenticatedAcompanharRoute
   '/fila': typeof AuthenticatedFilaRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/acompanhar': typeof AuthenticatedAcompanharRoute
   '/fila': typeof AuthenticatedFilaRoute
   '/': typeof AuthenticatedIndexRoute
 }
@@ -48,18 +56,20 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/acompanhar': typeof AuthenticatedAcompanharRoute
   '/_authenticated/fila': typeof AuthenticatedFilaRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/fila'
+  fullPaths: '/' | '/login' | '/acompanhar' | '/fila'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/fila' | '/'
+  to: '/login' | '/acompanhar' | '/fila' | '/'
   id:
     | '__root__'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/acompanhar'
     | '/_authenticated/fila'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/acompanhar': {
+      id: '/_authenticated/acompanhar'
+      path: '/acompanhar'
+      fullPath: '/acompanhar'
+      preLoaderRoute: typeof AuthenticatedAcompanharRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/fila': {
       id: '/_authenticated/fila'
       path: '/fila'
@@ -103,11 +120,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAcompanharRoute: typeof AuthenticatedAcompanharRoute
   AuthenticatedFilaRoute: typeof AuthenticatedFilaRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAcompanharRoute: AuthenticatedAcompanharRoute,
   AuthenticatedFilaRoute: AuthenticatedFilaRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }

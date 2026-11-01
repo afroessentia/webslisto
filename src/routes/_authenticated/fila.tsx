@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Copy, MapPin, SkipForward, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { WhatsappAction } from "@/components/whatsapp-action";
 import { LeadQuickActions, LeadReplyBadges } from "@/components/lead-quick-actions";
 import { LossReasonDialog } from "@/components/loss-reason-dialog";
 import { LeadWebsiteBadge } from "@/components/lead-website";
 import { useImportDialog } from "@/components/import-dialog-context";
-import { invalidateLeadActions, saveLeadStatus } from "@/lib/lead-actions";
 import { mapsUrl } from "@/lib/lead-notes";
 import { businessRating } from "@/lib/lead-details";
 import type { Lead } from "@/lib/leads";
@@ -72,7 +70,6 @@ function QueuePage() {
 }
 
 function QueueCard({ lead, onSkip }: { lead: Lead; onSkip: () => void }) {
-  const client = useQueryClient();
   const [confirm, setConfirm] = useState(false);
   const demo = demoLinks[lead.niche];
   async function copyDemo() {

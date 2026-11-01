@@ -16,6 +16,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { webLabels } from "@/components/lead-badges";
 import { LeadBusinessDetails } from "@/components/lead-business-details";
+import { LeadQuickActions } from "@/components/lead-quick-actions";
+import { invalidateFunnel, saveLossReason } from "@/lib/lead-funnel";
+import { lossLabels, lossReasons, type LossReason } from "@/lib/leads";
 import { invalidateLeadActions } from "@/lib/lead-actions";
 import type { Lead } from "@/lib/leads";
 import { historyDate, historyText, instagramUrl, leadHistoryOptions, mapsUrl, notesFields, notesPatch, safeHttpUrl, saveLeadNotes, type NotesFields } from "@/lib/lead-notes";
@@ -50,7 +53,9 @@ function NotesEditor({ lead }: { lead: Lead }) {
   const instagram = instagramUrl(draft.instagram_handle);
   return <SheetContent className="w-full overflow-y-auto bg-card px-5 sm:max-w-lg sm:px-6 motion-reduce:animate-none">
     <SheetHeader className="pr-7 text-left"><SheetTitle className="break-words">{lead.name}</SheetTitle><SheetDescription className="break-words">{lead.city || "—"}</SheetDescription></SheetHeader>
+    <div className="mt-3 flex justify-end"><LeadQuickActions lead={lead} /></div>
     <LeadBusinessDetails lead={lead} />
+    {(lead.status === "descartado" || lead.status === "no_contactar") && <LossReasonField lead={lead} />}
     <form className="mt-6 space-y-5" onSubmit={event => { event.preventDefault(); if (Object.keys(patch).length && !mutation.isPending) mutation.mutate(patch); }}>
       <fieldset disabled={mutation.isPending} className="min-w-0 space-y-5">
         <div className="space-y-2"><Label htmlFor={`${id}-notes`}>Notas</Label><Textarea id={`${id}-notes`} value={draft.notes ?? ""} onChange={event => setDraft({ ...draft, notes: event.target.value })} className="min-h-32 resize-y" /></div>
@@ -77,4 +82,21 @@ function NotesEditor({ lead }: { lead: Lead }) {
 
 function QuickLink({ href, children }: { href: string; children: React.ReactNode }) {
   return <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:underline">{children}<ExternalLink className="h-3 w-3" /></a>;
+}
+
+function LossReasonField({ lead }: { lead: Lead }) {
+  const client = useQueryClient();
+  const [value, setValue] = useState(lead.loss_reason ?? "");
+  const mutation = useMutation({
+    mutationFn: (reason: LossReason | null) => saveLossReason(lead.id, reason),
+    onSuccess: () => toast.success("Motivo de perda salvo."),
+    onError: () => { setValue(lead.loss_reason ?? ""); toast.error("Não foi possível salvar o motivo."); },
+    onSettled: () => invalidateFunnel(client),
+  });
+  return <div className="mt-6 space-y-2"><Label htmlFor={`loss-field-${lead.id}`}>Motivo de perda</Label>
+    <Select value={value || "__none__"} disabled={mutation.isPending} onValueChange={v => { const next = v === "__none__" ? "" : v; setValue(next); mutation.mutate(next ? next as LossReason : null); }}>
+      <SelectTrigger id={`loss-field-${lead.id}`}><SelectValue /></SelectTrigger>
+      <SelectContent><SelectItem value="__none__">Sem motivo</SelectItem>{lossReasons.map(r => <SelectItem key={r} value={r}>{lossLabels[r]}</SelectItem>)}</SelectContent>
+    </Select>
+  </div>;
 }

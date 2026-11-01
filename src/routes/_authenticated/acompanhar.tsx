@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeadStatusSelector } from "@/components/lead-status-selector";
+import { LeadQuickActions } from "@/components/lead-quick-actions";
 import { LeadNotesDrawer } from "@/components/lead-notes-drawer";
 import { invalidateLeadActions } from "@/lib/lead-actions";
 import { localDate } from "@/lib/follow-up-dates";
@@ -79,6 +80,7 @@ function FollowUpCard({ lead }: { lead: Lead }) {
     <div className="flex flex-wrap items-center gap-2">
       {conversation ? <Button asChild size="sm"><a href={conversation} target="_blank" rel="noopener noreferrer"><MessageCircle />Abrir conversa</a></Button> : <Button size="sm" disabled><MessageCircle />Abrir conversa</Button>}
       <Button variant="outline" size="sm" disabled={postpone.isPending} onClick={() => postpone.mutate()}><CalendarClock />Adiar 2 dias</Button>
+      <LeadQuickActions lead={lead} />
       <LeadNotesDrawer lead={lead} />
     </div>
   </li>;

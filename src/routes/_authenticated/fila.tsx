@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { WhatsappAction } from "@/components/whatsapp-action";
+import { LeadQuickActions, LeadReplyBadges } from "@/components/lead-quick-actions";
+import { LossReasonDialog } from "@/components/loss-reason-dialog";
 import { LeadWebsiteBadge } from "@/components/lead-website";
 import { useImportDialog } from "@/components/import-dialog-context";
 import { invalidateLeadActions, saveLeadStatus } from "@/lib/lead-actions";
@@ -73,12 +75,6 @@ function QueueCard({ lead, onSkip }: { lead: Lead; onSkip: () => void }) {
   const client = useQueryClient();
   const [confirm, setConfirm] = useState(false);
   const demo = demoLinks[lead.niche];
-  const discard = useMutation({
-    mutationFn: () => saveLeadStatus(lead.id, "descartado"),
-    retry: false,
-    onSuccess: async () => { toast.success("Lead descartado."); await invalidateLeadActions(client); },
-    onError: () => { toast.error("Não foi possível descartar o lead."); },
-  });
   async function copyDemo() {
     if (!demo) return;
     try { await navigator.clipboard.writeText(demo); toast.success("Link copiado."); } catch { toast.error("Não foi possível copiar."); }
@@ -89,14 +85,16 @@ function QueueCard({ lead, onSkip }: { lead: Lead; onSkip: () => void }) {
       <span>{lead.whatsapp_number || lead.phone || "—"}</span>
       <span className="inline-flex items-center gap-1 text-muted-foreground"><Star className="h-3.5 w-3.5 text-primary" />{businessRating(lead)}</span>
       <LeadWebsiteBadge lead={lead} />
+      <LeadReplyBadges lead={lead} />
     </div>
     <a href={mapsUrl(lead.name, lead.city, lead.google_place_id)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline"><MapPin className="h-3.5 w-3.5" />Ver no Google Maps</a>
     {demo && <div className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs"><span className="min-w-0 flex-1 truncate text-muted-foreground">{demo}</span><Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={copyDemo}><Copy className="h-3 w-3" />Copiar</Button></div>}
     <div className="flex flex-wrap gap-2">
       <WhatsappAction lead={lead} defaultCopy="demo_gratis" />
       <Button size="sm" variant="outline" className="px-2 text-xs" onClick={onSkip}><SkipForward className="h-3.5 w-3.5" />Pular</Button>
-      <Button size="sm" variant="outline" className="px-2 text-xs text-destructive" disabled={discard.isPending} onClick={() => setConfirm(true)}><Trash2 className="h-3.5 w-3.5" />Descartar</Button>
+      <Button size="sm" variant="outline" className="px-2 text-xs text-destructive" onClick={() => setConfirm(true)}><Trash2 className="h-3.5 w-3.5" />Descartar</Button>
+      <LeadQuickActions lead={lead} />
     </div>
-    <AlertDialog open={confirm} onOpenChange={setConfirm}><AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-xl sm:max-w-md"><AlertDialogHeader><AlertDialogTitle>Descartar lead?</AlertDialogTitle><AlertDialogDescription>Marcar {lead.name} como “Descartado”?</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => discard.mutate()}>Confirmar</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <LossReasonDialog lead={lead} status={confirm ? "descartado" : null} onClose={() => setConfirm(false)} />
   </li>;
 }

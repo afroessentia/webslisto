@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAcompanharRouteImport } from './routes/_authenticated/acompanhar'
 import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/fila'
+import { Route as AuthenticatedResultadosRouteImport } from './routes/_authenticated/resultados'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -39,17 +40,24 @@ const AuthenticatedFilaRoute = AuthenticatedFilaRouteImport.update({
   path: '/fila',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedResultadosRoute = AuthenticatedResultadosRouteImport.update({
+  id: '/resultados',
+  path: '/resultados',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/acompanhar': typeof AuthenticatedAcompanharRoute
   '/fila': typeof AuthenticatedFilaRoute
+  '/resultados': typeof AuthenticatedResultadosRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/acompanhar': typeof AuthenticatedAcompanharRoute
   '/fila': typeof AuthenticatedFilaRoute
+  '/resultados': typeof AuthenticatedResultadosRoute
   '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
@@ -58,19 +66,21 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/acompanhar': typeof AuthenticatedAcompanharRoute
   '/_authenticated/fila': typeof AuthenticatedFilaRoute
+  '/_authenticated/resultados': typeof AuthenticatedResultadosRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/acompanhar' | '/fila'
+  fullPaths: '/' | '/login' | '/acompanhar' | '/fila' | '/resultados'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/acompanhar' | '/fila' | '/'
+  to: '/login' | '/acompanhar' | '/fila' | '/resultados' | '/'
   id:
     | '__root__'
     | '/_authenticated'
     | '/login'
     | '/_authenticated/acompanhar'
     | '/_authenticated/fila'
+    | '/_authenticated/resultados'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
@@ -116,18 +126,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFilaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/resultados': {
+      id: '/_authenticated/resultados'
+      path: '/resultados'
+      fullPath: '/resultados'
+      preLoaderRoute: typeof AuthenticatedResultadosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAcompanharRoute: typeof AuthenticatedAcompanharRoute
   AuthenticatedFilaRoute: typeof AuthenticatedFilaRoute
+  AuthenticatedResultadosRoute: typeof AuthenticatedResultadosRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAcompanharRoute: AuthenticatedAcompanharRoute,
   AuthenticatedFilaRoute: AuthenticatedFilaRoute,
+  AuthenticatedResultadosRoute: AuthenticatedResultadosRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 

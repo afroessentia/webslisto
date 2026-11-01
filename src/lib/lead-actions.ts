@@ -54,14 +54,16 @@ export function templatesOptions(userId: string) {
 export async function saveWhatsappClick(lead: Lead, copy: CopyKey) {
   // Read the current status after opening WhatsApp; never overwrite a newer
   // status using the older row snapshot from the list.
-  const current = await supabase.from("leads").select("status,is_mobile,whatsapp_number").eq("id", lead.id).single();
+  const current = await supabase.from("leads").select("status,is_mobile,whatsapp_number,selected_copy,last_contact_date,follow_up_date,first_contacted_at").eq("id", lead.id).single();
   if (current.error) throw current.error;
   if (whatsappDisabledReason(current.data)) throw new Error("Contato indisponível ou bloqueado.");
   const result = await supabase.from("leads").update(sendUpdate(current.data.status, copy))
     .eq("id", lead.id).eq("status", current.data.status).select("id").single();
   if (result.error) throw result.error;
-  const event = await supabase.from("lead_events").insert({ lead_id: lead.id, event_type: "whatsapp_click", copy });
+  const { status, selected_copy, last_contact_date, follow_up_date, first_contacted_at } = current.data;
+  const event = await supabase.from("lead_events").insert({ lead_id: lead.id, event_type: "whatsapp_click", copy }).select("id").single();
   if (event.error) throw event.error;
+  return { leadId: lead.id, eventId: event.data?.id ?? null, previous: { status, selected_copy, last_contact_date, follow_up_date, first_contacted_at } };
 }
 
 export async function saveLeadStatus(leadId: string, status: LeadStatus) {
@@ -104,5 +106,6 @@ export async function invalidateLeadActions(client: QueryClient) {
   await Promise.all([
     client.invalidateQueries({ queryKey: ["leads"] }),
     client.invalidateQueries({ queryKey: ["lead_metrics"] }),
+    client.invalidateQueries({ queryKey: ["funnel"] }),
   ]);
 }

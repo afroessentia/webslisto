@@ -77,6 +77,7 @@ export type Database = {
           loss_reason: string | null
           name: string
           niche: Database["public"]["Enums"]["lead_niche"]
+          no_whatsapp_at: string | null
           notes: string | null
           original_url: string | null
           owner_id: string
@@ -110,6 +111,7 @@ export type Database = {
           loss_reason?: string | null
           name: string
           niche?: Database["public"]["Enums"]["lead_niche"]
+          no_whatsapp_at?: string | null
           notes?: string | null
           original_url?: string | null
           owner_id?: string
@@ -143,6 +145,7 @@ export type Database = {
           loss_reason?: string | null
           name?: string
           niche?: Database["public"]["Enums"]["lead_niche"]
+          no_whatsapp_at?: string | null
           notes?: string | null
           original_url?: string | null
           owner_id?: string

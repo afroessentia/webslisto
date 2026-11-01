@@ -3,6 +3,7 @@ import { z } from "zod";
 import { fallback } from "@tanstack/zod-adapter";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { addDays, madridDayStart } from "@/lib/madrid-time";
 
 export type Lead = Tables<"leads">;
 export const PAGE_SIZE = 25;
@@ -15,14 +16,30 @@ export const leadSearchSchema = z.object({
   websiteType: fallback(z.string(), "all").default("all"),
   noHttps: fallback(z.boolean(), false).default(false),
   status: fallback(z.string(), "all").default("all"),
+  contactFrom: fallback(z.string(), "").default(""),
+  contactTo: fallback(z.string(), "").default(""),
+  reply: fallback(z.string(), "all").default("all"),
+  proposal: fallback(z.string(), "all").default("all"),
+  loss: fallback(z.string(), "all").default("all"),
+  showLost: fallback(z.boolean(), false).default(false),
   page: fallback(z.number(), 1).default(1),
 });
+export const lossReasons = ["no_interesa", "ya_tiene_web", "negocio_cerrado", "solo_ia", "precio", "sin_whatsapp", "otro"] as const;
+export type LossReason = (typeof lossReasons)[number];
+export const lossLabels: Record<LossReason, string> = {
+  no_interesa: "Não tem interesse", ya_tiene_web: "Já tem site", negocio_cerrado: "Negócio fechado ou número inativo",
+  solo_ia: "Só resposta automática (IA)", precio: "Preço", sin_whatsapp: "Número sem WhatsApp", otro: "Outro",
+};
+const isoDay = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
 export const websiteTypes = ["sin_web", "solo_redes_sociales", "web_antigua_wordpress", "web_operativa"] as const;
 export function normalizeLeadFilters(filters: z.infer<typeof leadSearchSchema>) {
   const niche: Lead["niche"] | "all" = filters.niche === "reformas" || filters.niche === "belleza_estetica" || filters.niche === "otros" ? filters.niche : "all";
   const status: Lead["status"] | "all" = filters.status === "nuevo" || filters.status === "calificado" || filters.status === "demo_enviada" || filters.status === "en_conversacion" || filters.status === "ganado" || filters.status === "descartado" || filters.status === "no_contactar" ? filters.status : "all";
   const websiteType: Lead["website_status"] | "all" = websiteTypes.find(type => type === filters.websiteType) ?? "all";
-  return { ...filters, niche, status, websiteType, page: Number.isFinite(filters.page) ? Math.max(1, Math.floor(filters.page)) : 1 };
+  const reply = (["none", "human", "ai"] as const).find(v => v === filters.reply) ?? "all";
+  const proposal = (["yes", "no"] as const).find(v => v === filters.proposal) ?? "all";
+  const loss: LossReason | "none" | "all" = filters.loss === "none" ? "none" : lossReasons.find(v => v === filters.loss) ?? "all";
+  return { ...filters, niche, status, websiteType, reply, proposal, loss, contactFrom: isoDay(filters.contactFrom), contactTo: isoDay(filters.contactTo), page: Number.isFinite(filters.page) ? Math.max(1, Math.floor(filters.page)) : 1 };
 }
 export type LeadFilters = ReturnType<typeof normalizeLeadFilters>;
 export const defaultLeadFilters = normalizeLeadFilters(leadSearchSchema.parse({}));
@@ -45,8 +62,8 @@ export const statusLabels = {
   en_conversacion: "Em conversa", ganado: "Fechado", descartado: "Descartado", no_contactar: "Não contatar",
 } as const;
 
-export function buildLeadsQuery(filters: LeadFilters) {
-  let query = supabase.from("leads").select("*", { count: "exact" });
+export function leadFilterQuery(filters: LeadFilters, count?: "exact") {
+  let query = supabase.from("leads").select("*", count ? { count } : undefined);
   if (filters.q) query = query.ilike("name", `%${escapeLeadSearch(filters.q)}%`);
   if (filters.niche !== "all") query = query.eq("niche", filters.niche);
   if (filters.city) query = query.eq("city", filters.city);
@@ -54,10 +71,23 @@ export function buildLeadsQuery(filters: LeadFilters) {
   if (filters.websiteType !== "all") query = query.eq("website_status", filters.websiteType);
   else if (filters.noWeb) query = query.in("website_status", ["sin_web", "solo_redes_sociales"]);
   if (filters.noHttps) query = query.ilike("original_url", "http://%");
+  if (filters.contactFrom) query = query.gte("first_contacted_at", madridDayStart(filters.contactFrom));
+  if (filters.contactTo) query = query.lt("first_contacted_at", madridDayStart(addDays(filters.contactTo, 1)));
+  if (filters.reply === "none") query = query.not("first_contacted_at", "is", null).is("replied_at", null);
+  else if (filters.reply === "human") query = query.not("replied_at", "is", null).eq("reply_type", "humano");
+  else if (filters.reply === "ai") query = query.not("replied_at", "is", null).eq("reply_type", "ia");
+  if (filters.proposal === "yes") query = query.not("proposal_sent_at", "is", null);
+  else if (filters.proposal === "no") query = query.is("proposal_sent_at", null);
+  if (filters.loss === "none") query = query.is("loss_reason", null);
+  else if (filters.loss !== "all") query = query.eq("loss_reason", filters.loss);
   if (filters.status !== "all") query = query.eq("status", filters.status);
-  else query = query.not("status", "in", "(no_contactar,descartado)");
+  else if (filters.loss === "all" && !filters.showLost) query = query.not("status", "in", "(no_contactar,descartado)");
+  return query.order("created_at", { ascending: false }).order("id", { ascending: false });
+}
+
+export function buildLeadsQuery(filters: LeadFilters) {
   const { from, to } = pageRange(filters.page);
-  return query.order("created_at", { ascending: false }).order("id", { ascending: false }).range(from, to);
+  return leadFilterQuery(filters, "exact").range(from, to);
 }
 
 export function leadsOptions(userId: string, filters: LeadFilters) {

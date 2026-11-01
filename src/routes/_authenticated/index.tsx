@@ -1,7 +1,11 @@
 import { createFileRoute, useRouter, type ErrorComponentProps } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { useQueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { CalendarClock, ListChecks, RefreshCw } from "lucide-react";
+import { BarChart3, CalendarClock, Download, ListChecks, Loader2, RefreshCw } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { buildCsv, fetchAllFiltered } from "@/lib/lead-funnel";
+import { madridToday } from "@/lib/madrid-time";
 import { Link } from "@tanstack/react-router";
 import { MetricsStrip } from "@/components/metrics-strip";
 import { Button } from "@/components/ui/button";
@@ -44,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/")({
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold sm:text-3xl">Painel</h1><div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link to="/fila"><ListChecks />Fila de hoje</Link></Button><Button asChild variant="outline"><Link to="/acompanhar"><CalendarClock />Acompanhamentos</Link></Button></div></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold sm:text-3xl">Painel</h1><div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link to="/fila"><ListChecks />Fila de hoje</Link></Button><Button asChild variant="outline"><Link to="/acompanhar"><CalendarClock />Acompanhamentos</Link></Button><Button asChild variant="outline"><Link to="/resultados"><BarChart3 />Resultados</Link></Button></div></div>
       {children}
     </div>
   );
@@ -65,7 +69,7 @@ function Dashboard() {
 function LeadResults({ userId, filters, onClear, onPage }: { userId: string; filters: LeadFilters; onClear: () => void; onPage: (page: number) => void }) {
   const { data } = useSuspenseQuery(leadsOptions(userId, filters));
   const { data: hasAnyLeads } = useSuspenseQuery(leadExistenceOptions(userId));
-  return <><p className="text-xs text-muted-foreground" aria-live="polite">{data.count.toLocaleString("pt-BR")} {data.count === 1 ? "lead" : "leads"} com esses filtros</p><LeadsList rows={data.rows} count={data.count} page={filters.page} hasAnyLeads={hasAnyLeads} onPage={onPage} onClear={onClear} /></>;
+  return <><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs text-muted-foreground" aria-live="polite">{data.count.toLocaleString("pt-BR")} {data.count === 1 ? "lead" : "leads"} com esses filtros</p><ExportButton filters={filters} /></div><LeadsList rows={data.rows} count={data.count} page={filters.page} hasAnyLeads={hasAnyLeads} onPage={onPage} onClear={onClear} /></>;
 }
 
 function MetricsError({ reset }: ErrorComponentProps) {
@@ -79,4 +83,18 @@ function MetricsError({ reset }: ErrorComponentProps) {
       </div>
     </DashboardLayout>
   );
+}
+
+function ExportButton({ filters }: { filters: LeadFilters }) {
+  const exporter = useMutation({
+    mutationFn: () => fetchAllFiltered(filters),
+    onSuccess: leads => {
+      const url = URL.createObjectURL(new Blob([buildCsv(leads)], { type: "text/csv;charset=utf-8" }));
+      const a = document.createElement("a");
+      a.href = url; a.download = `leads-${madridToday()}.csv`; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    },
+    onError: () => toast.error("Não foi possível exportar os leads."),
+  });
+  return <Button size="sm" variant="outline" disabled={exporter.isPending} onClick={() => exporter.mutate()}>{exporter.isPending ? <Loader2 className="animate-spin" /> : <Download />}Exportar CSV</Button>;
 }

@@ -15,6 +15,13 @@
       "when": 1792948496982,
       "tag": "0001_create_search_runs",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793557450717,
+      "tag": "0002_lead_funnel_columns",
+      "breakpoints": true
     }
   ]
 }

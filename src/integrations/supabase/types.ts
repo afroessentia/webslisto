@@ -64,6 +64,7 @@ export type Database = {
           city: string | null
           created_at: string
           dedupe_key: string | null
+          first_contacted_at: string | null
           follow_up_date: string | null
           google_place_id: string | null
           google_rating: number | null
@@ -73,12 +74,16 @@ export type Database = {
           instagram_handle: string | null
           is_mobile: boolean
           last_contact_date: string | null
+          loss_reason: string | null
           name: string
           niche: Database["public"]["Enums"]["lead_niche"]
           notes: string | null
           original_url: string | null
           owner_id: string
           phone: string | null
+          proposal_sent_at: string | null
+          replied_at: string | null
+          reply_type: string | null
           selected_copy: Database["public"]["Enums"]["copy_t"] | null
           source: string
           status: Database["public"]["Enums"]["lead_status_t"]
@@ -92,6 +97,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           dedupe_key?: string | null
+          first_contacted_at?: string | null
           follow_up_date?: string | null
           google_place_id?: string | null
           google_rating?: number | null
@@ -101,12 +107,16 @@ export type Database = {
           instagram_handle?: string | null
           is_mobile?: boolean
           last_contact_date?: string | null
+          loss_reason?: string | null
           name: string
           niche?: Database["public"]["Enums"]["lead_niche"]
           notes?: string | null
           original_url?: string | null
           owner_id?: string
           phone?: string | null
+          proposal_sent_at?: string | null
+          replied_at?: string | null
+          reply_type?: string | null
           selected_copy?: Database["public"]["Enums"]["copy_t"] | null
           source?: string
           status?: Database["public"]["Enums"]["lead_status_t"]
@@ -120,6 +130,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           dedupe_key?: string | null
+          first_contacted_at?: string | null
           follow_up_date?: string | null
           google_place_id?: string | null
           google_rating?: number | null
@@ -129,12 +140,16 @@ export type Database = {
           instagram_handle?: string | null
           is_mobile?: boolean
           last_contact_date?: string | null
+          loss_reason?: string | null
           name?: string
           niche?: Database["public"]["Enums"]["lead_niche"]
           notes?: string | null
           original_url?: string | null
           owner_id?: string
           phone?: string | null
+          proposal_sent_at?: string | null
+          replied_at?: string | null
+          reply_type?: string | null
           selected_copy?: Database["public"]["Enums"]["copy_t"] | null
           source?: string
           status?: Database["public"]["Enums"]["lead_status_t"]
@@ -244,6 +259,30 @@ export type Database = {
         Returns: Database["public"]["Enums"]["website_status_t"]
       }
       ensure_default_templates: { Args: never; Returns: undefined }
+      funnel_metrics: {
+        Args: {
+          p_from: string
+          p_niche?: Database["public"]["Enums"]["lead_niche"]
+          p_to: string
+        }
+        Returns: {
+          contacted: number
+          demos: number
+          lost: number
+          lost_negocio_cerrado: number
+          lost_no_interesa: number
+          lost_otro: number
+          lost_precio: number
+          lost_sin_motivo: number
+          lost_solo_ia: number
+          lost_ya_tiene_web: number
+          proposals: number
+          replied: number
+          replied_ai: number
+          replied_human: number
+          won: number
+        }[]
+      }
       normalize_es_phone: { Args: { raw: string }; Returns: string }
     }
     Enums: {

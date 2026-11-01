@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Lead } from "@/lib/leads";
+import { showClickUndoToast } from "@/components/click-undo-toast";
 import { copyLabels, invalidateLeadActions, renderMessage, saveWhatsappClick, templatesOptions, whatsappDisabledReason, whatsappUrl, type CopyKey } from "@/lib/lead-actions";
 
 export function WhatsappAction({ lead, defaultCopy }: { lead: Lead; defaultCopy?: CopyKey }) {
@@ -35,10 +36,10 @@ function MessageComposer({ lead, defaultCopy, onClose }: { lead: Lead; defaultCo
   const mutation = useMutation({
     mutationFn: (key: CopyKey) => saveWhatsappClick(lead, key),
     retry: false,
-    onSuccess: async () => {
-      await invalidateLeadActions(client);
-      toast.success("Conversa aberta. Lead atualizado.");
+    onSuccess: async undo => {
+      showClickUndoToast(client, lead.name, undo);
       onClose();
+      await invalidateLeadActions(client);
     },
     onError: async () => {
       toast.error("Conversa aberta, mas não foi possível salvar todos os dados do lead.");

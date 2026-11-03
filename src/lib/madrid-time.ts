@@ -2,7 +2,7 @@ const TZ = "Europe/Madrid";
 const formatter = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
 
 function parts(ms: number) {
-  const p = Object.fromEntries(formatter.formatToParts(new Date(ms)).map(x => [x.type, x.value]));
+  const p = Object.fromEntries(formatter.formatToParts(new Date(ms)).map(x => [x.type, x.value])) as Record<"year" | "month" | "day" | "hour" | "minute" | "second", string>;
   return { y: Number(p.year), m: Number(p.month), d: Number(p.day), h: Number(p.hour), mi: Number(p.minute), s: Number(p.second) };
 }
 function offset(ms: number) {

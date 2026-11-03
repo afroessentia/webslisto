@@ -128,7 +128,7 @@ export function funnelOptions(userId: string, from: string, to: string, niche: N
       const { data, error } = await supabase.rpc("funnel_metrics", { p_from: from, p_to: to, ...(niche ? { p_niche: niche } : {}) });
       if (error) throw error;
       const row = (Array.isArray(data) ? data[0] : data) ?? {};
-      return Object.fromEntries(Object.entries(row).map(([k, v]) => [k, Number(v ?? 0)])) as Record<string, number>;
+      return Object.fromEntries(Object.entries(row).map(([k, v]) => [k, Number(v ?? 0)])) as Record<"contacted" | "replied" | "replied_human" | "replied_ai" | "demos" | "proposals" | "won" | "lost" | "lost_no_interesa" | "lost_ya_tiene_web" | "lost_negocio_cerrado" | "lost_solo_ia" | "lost_precio" | "lost_otro" | "lost_sin_motivo", number>;
     },
   });
 }

@@ -50,14 +50,16 @@ describe("WhatsApp rules", () => {
     expect(client.getQueryData(["leads", "user", "two"])).toEqual({ rows: [a], count: 1 });
   });
   it("writes only required fields and one whatsapp_click, never status_change", async () => {
-    const update = vi.fn(); const insert = vi.fn().mockResolvedValue({ error: null });
+    const update = vi.fn(); const insert = vi.fn().mockReturnValue({ select: () => ({ single: () => Promise.resolve({ data: { id: "ev1" }, error: null }) }) });
     const current = { status: "ganado", is_mobile: true, whatsapp_number: "+34612345678" };
     const query = { select: vi.fn(), eq: vi.fn(), single: vi.fn() };
     query.select.mockReturnValue(query); query.eq.mockReturnValue(query);
     query.single.mockResolvedValue({ data: current, error: null });
     update.mockReturnValue(query);
     mocks.from.mockImplementation(table => table === "lead_events" ? { insert } : { ...query, update });
-    await saveWhatsappClick({ id: "a" } as Lead, "demo_gratis");
+    const undo = await saveWhatsappClick({ id: "a" } as Lead, "demo_gratis");
+    expect(undo.eventId).toBe("ev1");
+    expect(undo.previous.status).toBe("ganado");
     expect(update).toHaveBeenCalledExactlyOnceWith({ selected_copy: "demo_gratis", last_contact_date: localDate() });
     expect(insert).toHaveBeenCalledExactlyOnceWith({ lead_id: "a", event_type: "whatsapp_click", copy: "demo_gratis" });
   });
